@@ -1,0 +1,24 @@
+# dependency
+/vendor/
+/node_modules/
+/simrs/vendor/
+
+# build dan aset hasil generate
+/dist/
+/frontend/dist/
+/simrs/web/assets/
+
+# runtime dan log
+/simrs/runtime/
+*.log
+
+# environment
+.env
+.env.local
+!.env.example
+
+# editor dan OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
