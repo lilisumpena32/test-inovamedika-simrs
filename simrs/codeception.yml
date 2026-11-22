@@ -12,10 +12,8 @@ actor_suffix: Tester
 settings:
   memory_limit: 1024M
   colors: true
-modules:
-  config:
-    Yii2:
-      configFile: config/test.php
+params:
+  - env
 extensions:
   enabled:
     - Codeception\Extension\RunFailed

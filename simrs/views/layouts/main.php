@@ -2,39 +2,35 @@
 
 declare(strict_types=1);
 
-/** @var yii\web\View $this */
-/** @var string $content */
-
-use app\widgets\Alert;
-use yii\bootstrap5\Breadcrumbs;
 use yii\helpers\Html;
 
-$this->render('_head');
+/** @var yii\web\View $this */
+/** @var string $content */
 ?>
 <?php $this->beginPage() ?>
-<!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>" class="h-100" data-bs-theme="light">
+<!doctype html>
+<html lang="id">
 <head>
-    <?php $this->head() ?>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= Html::encode($this->title) ?></title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: #f1f5f9;
+            font-family: system-ui, sans-serif;
+            color: #0f172a;
+            text-align: center;
+        }
+    </style>
 </head>
-<body class="d-flex flex-column h-100">
+<body>
 <?php $this->beginBody() ?>
-
-<?= $this->render('_header') ?>
-
-<main id="main" class="flex-grow-1" role="main">
-    <div class="container">
-        <?php if (!empty($this->params['breadcrumbs'])): ?>
-            <?= Breadcrumbs::widget(['links' => $this->params['breadcrumbs']]) ?>
-        <?php endif ?>
-        <?= Alert::widget() ?>
-        <?= $content ?>
-    </div>
-</main>
-
-<?= $this->render('_footer') ?>
-
+<?= $content ?>
 <?php $this->endBody() ?>
 </body>
 </html>

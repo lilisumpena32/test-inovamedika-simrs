@@ -30,6 +30,7 @@ services:
       DB_NAME: simrs
       DB_USER: simrs_app
       DB_PASSWORD: ${DB_APP_PASSWORD:-simrs_app}
+      JWT_SECRET: ${JWT_SECRET:-simrs-dev-secret-ganti-di-produksi}
       TZ: Asia/Jakarta
     volumes:
       - ./simrs:/var/www/simrs

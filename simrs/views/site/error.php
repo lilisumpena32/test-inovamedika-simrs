@@ -10,24 +10,21 @@ declare(strict_types=1);
 use yii\helpers\Html;
 use yii\web\HttpException;
 
-$this->title = $name;
 $statusCode = $exception instanceof HttpException ? $exception->statusCode : 500;
+$pesan = match ($statusCode) {
+    404 => 'Halaman tidak ditemukan.',
+    405 => 'Metode HTTP tidak didukung.',
+    500 => 'Terjadi kesalahan pada server.',
+    default => $message,
+};
+
+$this->title = "{$statusCode} - SIMRS Inova Medika";
 ?>
-<div class="site-error d-flex align-items-center justify-content-center text-center">
-    <div class="site-error-content mx-auto">
-        <h1 class="display-1 fw-bold text-body-secondary mb-0"><?= Html::encode($statusCode) ?></h1>
-
-        <h2 class="display-6 fw-semibold mb-3"><?= Html::encode($message) ?></h2>
-
-        <p class="text-body-secondary mb-4">
-            The above error occurred while the Web server was processing your request.
-            Please contact us if you think this is a server error. Thank you.
-        </p>
-
-        <?= Html::a(
-            'Go to Homepage',
-            Yii::$app->homeUrl,
-            ['class' => 'btn btn-outline-primary btn-lg'],
-        ) ?>
-    </div>
-</div>
+<p style="margin:0; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#64748b;">
+    SIMRS Inova Medika
+</p>
+<h1 style="margin:8px 0 0; font-size:56px; font-weight:700;"><?= Html::encode((string) $statusCode) ?></h1>
+<p style="margin:12px 0 0;"><?= Html::encode($pesan) ?></p>
+<p style="margin:16px 0 0;">
+    <a href="<?= Yii::$app->homeUrl ?>" style="color:#0d9488;">Kembali ke beranda</a>
+</p>

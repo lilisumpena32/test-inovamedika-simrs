@@ -1,0 +1,15 @@
+actor: ApiTester
+suite_namespace: app\tests\Api
+modules:
+  enabled:
+    - REST:
+        depends: PhpBrowser
+        url: http://nginx/api/v1
+    - Db:
+        dsn: 'pgsql:host=db;port=5432;dbname=simrs'
+        user: simrs_app
+        password: '%DB_PASSWORD%'
+        cleanup: false
+    - app\tests\Support\Helper\DbSimrs
+    - Asserts
+step_decorators: ~
