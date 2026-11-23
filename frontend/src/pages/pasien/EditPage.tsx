@@ -1,0 +1,170 @@
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useForm } from 'react-hook-form'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { z } from 'zod'
+import { errorMessage } from '../../api/client'
+import { getPasien, updatePasien } from '../../api/pasien'
+import type { PasienRow } from '../../api/pasien'
+import { FormMaster } from '../../components/FormMaster'
+import { useToast } from '../../hooks/useToast'
+
+const schema = z.object({
+  nama: z.string().min(1, 'Nama pasien wajib diisi').max(120, 'Maksimal 120 karakter'),
+  nik: z
+    .string()
+    .regex(/^\d{16}$/, 'NIK harus 16 digit angka')
+    .optional()
+    .or(z.literal('')),
+  tanggal_lahir: z.string(),
+  jenis_kelamin: z.string().min(1, 'Pilih jenis kelamin'),
+  no_hp: z.string(),
+  alamat: z.string(),
+})
+
+type PasienValues = z.infer<typeof schema>
+
+export function EditPage() {
+  const { id } = useParams<{ id: string }>()
+
+  const pasiens = useQuery({
+    queryKey: ['pasien', id],
+    queryFn: () => getPasien(id as string),
+    enabled: id !== undefined,
+    retry: false,
+  })
+
+  if (pasiens.isPending) {
+    return <p className="text-sm text-slate-500">Memuat...</p>
+  }
+
+  if (pasiens.isError) {
+    return (
+      <div className="space-y-4">
+        <div
+          role="alert"
+          className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {errorMessage(pasiens.error)}
+        </div>
+        <Link to="/master/pasien" className="text-sm font-medium text-teal-700 underline">
+          Kembali ke List Pasien
+        </Link>
+      </div>
+    )
+  }
+
+  return <Form pasien={pasiens.data} />
+}
+
+function Form({ pasien }: { pasien: PasienRow }) {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const toast = useToast()
+
+  const mutation = useMutation({
+    mutationFn: (values: PasienValues) =>
+      updatePasien(pasien.id, {
+        ...values,
+        nik: values.nik === undefined || values.nik === '' ? null : values.nik,
+      }),
+    onSuccess: (result) => {
+      void queryClient.invalidateQueries({ queryKey: ['pasiens'] })
+      toast.success(result.message)
+      navigate('/master/pasien')
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  })
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<PasienValues>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      nama: pasien.nama,
+      nik: pasien.nik ?? '',
+      tanggal_lahir: pasien.tanggal_lahir ?? '',
+      jenis_kelamin: pasien.jenis_kelamin,
+      no_hp: pasien.no_hp ?? '',
+      alamat: pasien.alamat ?? '',
+    },
+  })
+
+  return (
+    <FormMaster judul="Ubah Pasien" pending={mutation.isPending} onSubmit={handleSubmit((values) => mutation.mutate(values))}>
+      <div>
+        <label htmlFor="no_rm" className="mb-1.5 block text-sm font-medium">
+          No RM
+        </label>
+        <input id="no_rm" type="text" value={pasien.no_rm} disabled className="input" />
+      </div>
+
+      <div>
+        <label htmlFor="nama" className="mb-1.5 block text-sm font-medium">
+          Nama pasien
+        </label>
+        <input
+          id="nama"
+          type="text"
+          className="input"
+          aria-invalid={errors.nama !== undefined}
+          {...register('nama')}
+        />
+        {errors.nama && <p className="mt-1 text-xs text-red-600">{errors.nama.message}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="nik" className="mb-1.5 block text-sm font-medium">
+          NIK
+        </label>
+        <input
+          id="nik"
+          type="text"
+          className="input"
+          aria-invalid={errors.nik !== undefined}
+          {...register('nik')}
+        />
+        {errors.nik && <p className="mt-1 text-xs text-red-600">{errors.nik.message}</p>}
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label htmlFor="tanggal_lahir" className="mb-1.5 block text-sm font-medium">
+            Tanggal lahir
+          </label>
+          <input id="tanggal_lahir" type="date" className="input" {...register('tanggal_lahir')} />
+        </div>
+        <div>
+          <label htmlFor="jenis_kelamin" className="mb-1.5 block text-sm font-medium">
+            Jenis kelamin
+          </label>
+          <select
+            id="jenis_kelamin"
+            className="input"
+            aria-invalid={errors.jenis_kelamin !== undefined}
+            {...register('jenis_kelamin')}
+          >
+            <option value="L">Laki-laki</option>
+            <option value="P">Perempuan</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label htmlFor="no_hp" className="mb-1.5 block text-sm font-medium">
+          No HP
+        </label>
+        <input id="no_hp" type="text" className="input" {...register('no_hp')} />
+      </div>
+
+      <div>
+        <label htmlFor="alamat" className="mb-1.5 block text-sm font-medium">
+          Alamat
+        </label>
+        <textarea id="alamat" rows={3} className="input" {...register('alamat')} />
+      </div>
+    </FormMaster>
+  )
+}

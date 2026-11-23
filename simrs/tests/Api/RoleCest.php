@@ -27,17 +27,9 @@ class RoleCest
 
     private function pulihkanRoleLain(ApiTester $I): void
     {
-        $idMenuDashboard = (string) $I->grabFromDatabase('menu', 'id', ['kode' => 'dashboard']);
-
         foreach (['dokter', 'kasir'] as $kode) {
-            $idRole = FixtureUser::idRole($I, $kode);
+            FixtureUser::pulihkanAksesRole($I, $kode);
             $I->updateInDatabase('role', ['is_active' => 'true', 'role_name' => ucfirst($kode)], ['role_code' => $kode]);
-            $I->hapusBaris('DELETE FROM role_access WHERE role_id = ?', [$idRole]);
-            $I->haveInDatabase('role_access', [
-                'role_id' => $idRole,
-                'menu_id' => $idMenuDashboard,
-                'can_view' => 'true',
-            ]);
         }
     }
 

@@ -24,7 +24,7 @@ export function IndexPage() {
 
   const users = useQuery({
     queryKey: ['users', { q: qDebounced, role, status, page }],
-    queryFn: () => listUsers({ q: qDebounced, role, is_active: status, page }),
+    queryFn: () => listUsers({ q: qDebounced, role, is_active: status, tanpa_karyawan: '', page }),
   })
 
   const roles = useQuery({

@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace app\commands;
 
+use app\models\Jabatan;
 use app\models\Menu;
 use app\models\Role;
 use app\models\RoleAccess;
+use app\models\Spesialis;
 use app\models\User;
 use app\models\UserAccess;
 use Yii;
@@ -27,6 +29,13 @@ class RbacController extends Controller
 
     private const MENUS = [
         ['kode' => 'dashboard', 'parent' => null, 'label' => 'Dashboard', 'path' => '/', 'icon' => 'layout-dashboard', 'sorter' => 10],
+        ['kode' => 'master', 'parent' => null, 'label' => 'Master', 'path' => null, 'icon' => 'folder', 'sorter' => 20],
+        ['kode' => 'master.pasien', 'parent' => 'master', 'label' => 'Pasien', 'path' => '/master/pasien', 'icon' => 'user-round', 'sorter' => 21],
+        ['kode' => 'master.poli', 'parent' => 'master', 'label' => 'Poli', 'path' => '/master/poli', 'icon' => 'map-pin', 'sorter' => 22],
+        ['kode' => 'master.karyawan', 'parent' => 'master', 'label' => 'Karyawan', 'path' => '/master/karyawan', 'icon' => 'briefcase', 'sorter' => 23],
+        ['kode' => 'master.jadwal', 'parent' => 'master', 'label' => 'Jadwal', 'path' => '/master/jadwal', 'icon' => 'calendar-days', 'sorter' => 24],
+        ['kode' => 'farmasi', 'parent' => null, 'label' => 'Farmasi', 'path' => null, 'icon' => 'pill', 'sorter' => 30],
+        ['kode' => 'farmasi.obat', 'parent' => 'farmasi', 'label' => 'Obat', 'path' => '/farmasi/obat', 'icon' => 'pill', 'sorter' => 31],
         ['kode' => 'pengaturan', 'parent' => null, 'label' => 'Pengaturan', 'path' => null, 'icon' => 'settings', 'sorter' => 90],
         ['kode' => 'pengaturan.user', 'parent' => 'pengaturan', 'label' => 'User', 'path' => '/setting/user', 'icon' => 'users', 'sorter' => 91],
         ['kode' => 'pengaturan.role', 'parent' => 'pengaturan', 'label' => 'Role', 'path' => '/setting/role', 'icon' => 'shield', 'sorter' => 92],
@@ -35,6 +44,11 @@ class RbacController extends Controller
     private const MATRIX = [
         'admin' => [
             'dashboard' => ['view'],
+            'master.pasien' => ['view', 'create', 'update'],
+            'master.poli' => ['view', 'create', 'update'],
+            'master.karyawan' => ['view', 'create', 'update'],
+            'master.jadwal' => ['view', 'create', 'update'],
+            'farmasi.obat' => ['view', 'create', 'update'],
             'pengaturan.user' => ['view', 'create', 'update', 'delete'],
             'pengaturan.role' => ['view', 'create', 'update'],
         ],
@@ -66,6 +80,7 @@ class RbacController extends Controller
             $role = $this->simpanRole();
             $menu = $this->simpanMenu();
             $this->simpanRoleAccess($role, $menu);
+            $this->simpanJabatanSpesialis();
             $userAccessBaru = $this->sinkronUserAccess();
 
             $transaksi->commit();
@@ -81,6 +96,57 @@ class RbacController extends Controller
         );
 
         return ExitCode::OK;
+    }
+
+    private const JABATAN_AWAL = [
+        ['dokter', 'Dokter', true],
+        ['perawat', 'Perawat', false],
+        ['apoteker', 'Apoteker', false],
+        ['kasir', 'Kasir', false],
+        ['pendaftaran', 'Pendaftaran', false],
+    ];
+
+    private const SPESIALIS_AWAL = [
+        'umum' => 'Umum',
+        'anak' => 'Anak',
+        'bedah' => 'Bedah',
+        'saraf' => 'Saraf',
+        'jantung' => 'Jantung',
+    ];
+
+    private function simpanJabatanSpesialis(): void
+    {
+        foreach (self::JABATAN_AWAL as [$kode, $nama, $isDokter]) {
+            $jabatan = Jabatan::find()->where(['kode_jabatan' => $kode])->one();
+
+            if ($jabatan !== null) {
+                continue;
+            }
+
+            $jabatan = new Jabatan([
+                'kode_jabatan' => $kode,
+                'nama_jabatan' => $nama,
+                'is_dokter' => $isDokter,
+            ]);
+
+            if (!$jabatan->save(false)) {
+                throw new \RuntimeException("gagal menyimpan jabatan {$kode}");
+            }
+        }
+
+        foreach (self::SPESIALIS_AWAL as $kode => $nama) {
+            $spesialis = Spesialis::find()->where(['kode_spesialis' => $kode])->one();
+
+            if ($spesialis !== null) {
+                continue;
+            }
+
+            $spesialis = new Spesialis(['kode_spesialis' => $kode, 'nama_spesialis' => $nama]);
+
+            if (!$spesialis->save(false)) {
+                throw new \RuntimeException("gagal menyimpan spesialis {$kode}");
+            }
+        }
     }
 
     private function simpanRole(): array

@@ -26,6 +26,7 @@ export type UserFilter = {
   q: string
   role: string
   is_active: string
+  tanpa_karyawan: string
   page: number
 }
 
@@ -43,13 +44,20 @@ export type UserUpdate = {
   role_id: string
 }
 
-export async function listUsers(filter: UserFilter): Promise<UserList> {
+export async function listUsers(filter: {
+  q?: string
+  role?: string
+  is_active?: string
+  tanpa_karyawan?: string
+  page?: number
+}): Promise<UserList> {
   const response = await client.get<ApiResponse<UserList>>('/user', {
     params: {
       q: filter.q || undefined,
       role: filter.role || undefined,
       is_active: filter.is_active || undefined,
-      page: filter.page > 1 ? filter.page : undefined,
+      tanpa_karyawan: filter.tanpa_karyawan || undefined,
+      page: filter.page && filter.page > 1 ? filter.page : undefined,
     },
   })
   return response.data.data

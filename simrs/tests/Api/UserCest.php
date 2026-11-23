@@ -24,6 +24,7 @@ class UserCest
 
     private function bersihkan(ApiTester $I): void
     {
+        $I->hapusBaris('DELETE FROM karyawan WHERE nama_karyawan = ?', ['Uji Dokter']);
         FixtureUser::hapus($I, self::USERNAME_BARU);
         FixtureUser::pulihkanAdmin($I);
     }
@@ -136,10 +137,12 @@ class UserCest
         ]);
 
         $I->seeResponseCodeIs(200);
-        $I->seeResponseContainsJson([
-            'data' => ['full_name' => 'Uji Baru Jadi Admin', 'role' => ['code' => 'admin']],
-        ]);
-        $I->assertSame(3, (int) $I->grabNumRecords('user_access', ['user_id' => $id]));
+        $I->seeResponseContainsJson(['message' => 'User diubah.', 'data' => ['role' => ['code' => 'admin']]]);
+        $menuAdmin = count($I->grabColumnFromDatabase('role_access', 'menu_id', [
+            'role_id' => $idRoleAdmin,
+            'can_view' => 'true',
+        ]));
+        $I->assertSame($menuAdmin, (int) $I->grabNumRecords('user_access', ['user_id' => $id]));
     }
 
     public function nonaktifkanUser(ApiTester $I): void
@@ -251,5 +254,41 @@ class UserCest
 
         $I->seeResponseCodeIs(404);
         $I->seeResponseContainsJson(['message' => 'User tidak ditemukan']);
+    }
+
+    public function filterTanpaKaryawan(ApiTester $I): void
+    {
+        $token = FixtureUser::token($I, 'admin', 'admin123');
+        $idJabatanDokter = (string) $I->grabFromDatabase('jabatan', 'id', ['kode_jabatan' => 'dokter']);
+        $idSpesialisUmum = (string) $I->grabFromDatabase('spesialis', 'id', ['kode_spesialis' => 'umum']);
+
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $token);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+
+        $I->sendPOST('user', [
+            'username' => 'uji_baru',
+            'full_name' => 'Uji Baru',
+            'role_id' => FixtureUser::idRole($I, 'kasir'),
+            'password' => 'rahasia123',
+        ]);
+        $I->seeResponseCodeIs(201);
+        $id = (string) $I->grabDataFromResponseByJsonPath('$.data.id')[0];
+
+        $I->sendGET('user', ['tanpa_karyawan' => '1']);
+        $I->seeResponseCodeIs(200);
+        $I->assertContains('uji_baru', $I->grabDataFromResponseByJsonPath('$.data.items[*].username'));
+
+        $I->sendPOST('karyawan', [
+            'nama_karyawan' => 'Uji Dokter',
+            'jenis_kelamin' => 'L',
+            'jabatan_id' => $idJabatanDokter,
+            'spesialis_id' => $idSpesialisUmum,
+            'user_id' => $id,
+        ]);
+        $I->seeResponseCodeIs(201);
+
+        $I->sendGET('user', ['tanpa_karyawan' => '1']);
+        $I->seeResponseCodeIs(200);
+        $I->assertNotContains('uji_baru', $I->grabDataFromResponseByJsonPath('$.data.items[*].username'));
     }
 }

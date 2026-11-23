@@ -57,6 +57,17 @@ final class FixtureUser
         $I->hapusBaris('DELETE FROM "user" WHERE username = ?', [$username]);
     }
 
+    public static function pulihkanAksesRole(ApiTester $I, string $kodeRole): void
+    {
+        $idMenuDashboard = (string) $I->grabFromDatabase('menu', 'id', ['kode' => 'dashboard']);
+        $idRole = self::idRole($I, $kodeRole);
+        $I->hapusBaris('DELETE FROM role_access WHERE role_id = ?', [$idRole]);
+        $I->eksekusi(
+            'INSERT INTO role_access (role_id, menu_id, can_view) VALUES (?, ?, true)',
+            [$idRole, $idMenuDashboard],
+        );
+    }
+
     public static function pulihkanAdmin(ApiTester $I): void
     {
         $I->updateInDatabase('role', ['is_active' => 'true'], ['role_code' => 'admin']);
@@ -72,7 +83,10 @@ final class FixtureUser
 
         foreach ($I->grabColumnFromDatabase('role_access', 'menu_id', ['role_id' => $roleId, 'can_view' => 'true']) as $menuId) {
             if ((int) $I->grabNumRecords('user_access', ['user_id' => $userId, 'menu_id' => $menuId]) === 0) {
-                $I->haveInDatabase('user_access', ['user_id' => $userId, 'menu_id' => $menuId]);
+                $I->eksekusi(
+                    'INSERT INTO user_access (user_id, menu_id) VALUES (?, ?)',
+                    [$userId, $menuId],
+                );
             }
         }
     }

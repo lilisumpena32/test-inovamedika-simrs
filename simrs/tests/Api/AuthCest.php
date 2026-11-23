@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace app\tests\Api;
 
 use app\tests\Support\ApiTester;
+use app\tests\Support\FixtureUser;
 use Firebase\JWT\JWT;
 
 class AuthCest
@@ -16,6 +17,7 @@ class AuthCest
     public function _before(ApiTester $I): void
     {
         $this->pulihkanAdmin($I);
+        FixtureUser::pulihkanAksesRole($I, 'kasir');
         $this->hapusKasir($I);
         $this->buatKasir($I);
     }
@@ -23,6 +25,7 @@ class AuthCest
     public function _after(ApiTester $I): void
     {
         $this->pulihkanAdmin($I);
+        FixtureUser::pulihkanAksesRole($I, 'kasir');
         $this->hapusKasir($I);
     }
 
@@ -160,7 +163,7 @@ class AuthCest
         $I->haveHttpHeader('Authorization', 'Bearer ' . $token);
         $I->sendGET('menu');
         $I->seeResponseCodeIs(200);
-        $I->assertSame(['pengaturan'], $I->grabDataFromResponseByJsonPath('$.data[*].kode'));
+        $I->assertSame(['master', 'farmasi', 'pengaturan'], $I->grabDataFromResponseByJsonPath('$.data[*].kode'));
 
         $this->pulihkanAksesAdmin($I);
 
@@ -168,7 +171,7 @@ class AuthCest
         $I->sendGET('menu');
         $I->seeResponseCodeIs(200);
         $I->assertSame(
-            ['dashboard', 'pengaturan'],
+            ['dashboard', 'master', 'farmasi', 'pengaturan'],
             $I->grabDataFromResponseByJsonPath('$.data[*].kode'),
         );
     }

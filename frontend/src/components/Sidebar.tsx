@@ -1,9 +1,15 @@
 import {
+  Briefcase,
+  CalendarDays,
   Circle,
+  Folder,
   LayoutDashboard,
   LogOut,
+  MapPin,
+  Pill,
   Settings,
   Shield,
+  UserRound,
   Users,
   X,
 } from 'lucide-react'
@@ -14,6 +20,12 @@ import { useSession } from '../auth/session'
 
 const IKONS: Record<string, LucideIcon> = {
   'layout-dashboard': LayoutDashboard,
+  folder: Folder,
+  'user-round': UserRound,
+  'map-pin': MapPin,
+  briefcase: Briefcase,
+  'calendar-days': CalendarDays,
+  pill: Pill,
   settings: Settings,
   shield: Shield,
   users: Users,

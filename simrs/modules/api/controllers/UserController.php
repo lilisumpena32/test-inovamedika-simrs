@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace app\modules\api\controllers;
 
+use app\models\Karyawan;
 use app\models\Role;
 use app\models\User;
 use app\models\UserAccess;
@@ -34,6 +35,7 @@ class UserController extends ApiController
         $q = trim((string) $request->get('q', ''));
         $kodeRole = trim((string) $request->get('role', ''));
         $aktif = (string) $request->get('is_active', '');
+        $tanpaKaryawan = (string) $request->get('tanpa_karyawan', '');
         $halaman = max(1, (int) $request->get('page', '1'));
         $perHalaman = min(50, max(1, (int) $request->get('per', '15')));
 
@@ -41,6 +43,14 @@ class UserController extends ApiController
             ->from(['u' => '{{%user}}'])
             ->innerJoin(['r' => '{{%role}}'], 'r.id = u.role_id')
             ->where(['u.is_delete' => false]);
+
+        if ($tanpaKaryawan === '1' || $tanpaKaryawan === 'true') {
+            $query->andWhere([
+                'not in',
+                'u.id',
+                Karyawan::find()->select('user_id')->where(['not', ['user_id' => null]]),
+            ]);
+        }
 
         if ($q !== '') {
             $query->andWhere(['or', ['like', 'u.username', $q], ['like', 'u.full_name', $q]]);

@@ -9,11 +9,12 @@ use Codeception\Module\Db;
 
 class DbSimrs extends Module
 {
-    /**
-     * Menjalankan DELETE/UPDATE mentah lewat koneksi modul Db.
-     * Modul Db bawaan tidak menyediakan deleteFromDatabase.
-     */
     public function hapusBaris(string $sql, array $parameter = []): void
+    {
+        $this->eksekusi($sql, $parameter);
+    }
+
+    public function eksekusi(string $sql, array $parameter = []): void
     {
         /** @var Db $db */
         $db = $this->getModule('Db');
