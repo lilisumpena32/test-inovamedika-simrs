@@ -7,3 +7,7 @@
 .card {
   @apply rounded-lg border border-slate-200 bg-white;
 }
+
+.select {
+  @apply rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500;
+}

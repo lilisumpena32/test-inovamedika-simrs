@@ -35,8 +35,8 @@ class RbacController extends Controller
     private const MATRIX = [
         'admin' => [
             'dashboard' => ['view'],
-            'pengaturan.user' => ['view', 'create', 'update'],
-            'pengaturan.role' => ['view'],
+            'pengaturan.user' => ['view', 'create', 'update', 'delete'],
+            'pengaturan.role' => ['view', 'create', 'update'],
         ],
         'pendaftaran' => [
             'dashboard' => ['view'],
@@ -128,9 +128,15 @@ class RbacController extends Controller
     private function simpanRoleAccess(array $role, array $menu): void
     {
         foreach (self::MATRIX as $kodeRole => $daftar) {
-            RoleAccess::deleteAll(['role_id' => $role[$kodeRole]]);
-
             foreach ($daftar as $kodeMenu => $hak) {
+                $akses = RoleAccess::find()
+                    ->where(['role_id' => $role[$kodeRole], 'menu_id' => $menu[$kodeMenu]])
+                    ->one();
+
+                if ($akses !== null) {
+                    continue;
+                }
+
                 $akses = new RoleAccess([
                     'role_id' => $role[$kodeRole],
                     'menu_id' => $menu[$kodeMenu],

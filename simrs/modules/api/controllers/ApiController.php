@@ -67,11 +67,11 @@ class ApiController extends Controller
         }
     }
 
-    protected function sukses(mixed $data, int $kode = 200): array
+    protected function sukses(mixed $data, int $kode = 200, string $pesan = ''): array
     {
         Yii::$app->response->statusCode = $kode;
 
-        return ApiResponse::ok($data, $kode);
+        return ApiResponse::ok($data, $kode, $pesan);
     }
 
     protected function gagal(string $pesan, int $kode): array

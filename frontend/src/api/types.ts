@@ -41,5 +41,6 @@ export type SessionData = {
 export type ApiResponse<T> = {
   status: true
   code: number
+  message: string
   data: T
 }

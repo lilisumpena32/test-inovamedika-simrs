@@ -6,11 +6,12 @@ namespace app\components;
 
 final class ApiResponse
 {
-    public static function ok(mixed $data, int $kode = 200): array
+    public static function ok(mixed $data, int $kode = 200, string $pesan = ''): array
     {
         return [
             'status' => true,
             'code' => $kode,
+            'message' => $pesan,
             'data' => $data,
         ];
     }

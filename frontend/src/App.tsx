@@ -4,11 +4,17 @@ import { AuthProvider } from './auth/AuthProvider'
 import { MenuGuard } from './auth/MenuGuard'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { AppLayout } from './components/AppLayout'
+import { ToastProvider } from './components/Toast'
 import { IndexPage as DashboardPage } from './pages/dashboard/IndexPage'
 import { LoginPage } from './pages/login/LoginPage'
+import { AccessPage as RoleAccessPage } from './pages/role/AccessPage'
+import { CreatePage as RoleCreatePage } from './pages/role/CreatePage'
+import { EditPage as RoleEditPage } from './pages/role/EditPage'
 import { IndexPage as RoleIndexPage } from './pages/role/IndexPage'
 import { NotFound } from './pages/NotFound'
+import { CreatePage as UserCreatePage } from './pages/user/CreatePage'
 import { IndexPage as UserIndexPage } from './pages/user/IndexPage'
+import { UpdatePage as UserUpdatePage } from './pages/user/UpdatePage'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -21,7 +27,8 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
@@ -45,10 +52,50 @@ export default function App() {
                   }
                 />
                 <Route
+                  path="setting/user/create"
+                  element={
+                    <MenuGuard kode="pengaturan.user">
+                      <UserCreatePage />
+                    </MenuGuard>
+                  }
+                />
+                <Route
+                  path="setting/user/update/:id"
+                  element={
+                    <MenuGuard kode="pengaturan.user">
+                      <UserUpdatePage />
+                    </MenuGuard>
+                  }
+                />
+                <Route
                   path="setting/role"
                   element={
                     <MenuGuard kode="pengaturan.role">
                       <RoleIndexPage />
+                    </MenuGuard>
+                  }
+                />
+                <Route
+                  path="setting/role/create"
+                  element={
+                    <MenuGuard kode="pengaturan.role">
+                      <RoleCreatePage />
+                    </MenuGuard>
+                  }
+                />
+                <Route
+                  path="setting/role/update/:id"
+                  element={
+                    <MenuGuard kode="pengaturan.role">
+                      <RoleEditPage />
+                    </MenuGuard>
+                  }
+                />
+                <Route
+                  path="setting/role/access/:id"
+                  element={
+                    <MenuGuard kode="pengaturan.role">
+                      <RoleAccessPage />
                     </MenuGuard>
                   }
                 />
@@ -59,6 +106,7 @@ export default function App() {
           </Routes>
         </AuthProvider>
       </BrowserRouter>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }
