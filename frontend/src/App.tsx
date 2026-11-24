@@ -13,6 +13,17 @@ import { IndexPage as KunjunganIndexPage } from './pages/kunjungan/IndexPage'
 import { ListPage as KunjunganListPage } from './pages/kunjungan/ListPage'
 import { EditPage as KunjunganEditPage } from './pages/kunjungan/EditPage'
 import { IndexPage as AntreanIndexPage } from './pages/antrean/IndexPage'
+import { IndexPage as TindakanIndexPage } from './pages/tindakan/IndexPage'
+import { CreatePage as TindakanCreatePage } from './pages/tindakan/CreatePage'
+import { EditPage as TindakanEditPage } from './pages/tindakan/EditPage'
+import { IndexPage as JenisLabIndexPage } from './pages/jenislab/IndexPage'
+import { CreatePage as JenisLabCreatePage } from './pages/jenislab/CreatePage'
+import { EditPage as JenisLabEditPage } from './pages/jenislab/EditPage'
+import { IndexPage as PemeriksaanIndexPage } from './pages/pemeriksaan/IndexPage'
+import { PemeriksaanPage } from './pages/pemeriksaan/PemeriksaanPage'
+import { IndexPage as ResepIndexPage } from './pages/resep/IndexPage'
+import { ResepPage } from './pages/resep/ResepPage'
+import { IndexPage as LabIndexPage } from './pages/laboratorium/IndexPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { IndexPage as KaryawanIndexPage } from './pages/karyawan/IndexPage'
 import { CreatePage as KaryawanCreatePage } from './pages/karyawan/CreatePage'
@@ -168,6 +179,97 @@ export default function App() {
                     element={
                       <MenuGuard kode="master.jadwal">
                         <JadwalEditPage />
+                      </MenuGuard>
+                    }
+                  />
+
+                  <Route
+                    path="master/tindakan"
+                    element={
+                      <MenuGuard kode="master.tindakan">
+                        <TindakanIndexPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="master/tindakan/create"
+                    element={
+                      <MenuGuard kode="master.tindakan">
+                        <TindakanCreatePage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="master/tindakan/update/:id"
+                    element={
+                      <MenuGuard kode="master.tindakan">
+                        <TindakanEditPage />
+                      </MenuGuard>
+                    }
+                  />
+
+                  <Route
+                    path="master/jenis-lab"
+                    element={
+                      <MenuGuard kode="master.jenis-lab">
+                        <JenisLabIndexPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="master/jenis-lab/create"
+                    element={
+                      <MenuGuard kode="master.jenis-lab">
+                        <JenisLabCreatePage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="master/jenis-lab/update/:id"
+                    element={
+                      <MenuGuard kode="master.jenis-lab">
+                        <JenisLabEditPage />
+                      </MenuGuard>
+                    }
+                  />
+
+                  <Route
+                    path="pemeriksaan"
+                    element={
+                      <MenuGuard kode="pemeriksaan.daftar">
+                        <PemeriksaanIndexPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="pemeriksaan/:id"
+                    element={
+                      <MenuGuard kode="pemeriksaan.daftar">
+                        <PemeriksaanPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="farmasi/resep"
+                    element={
+                      <MenuGuard kode="farmasi.resep">
+                        <ResepIndexPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="farmasi/resep/:id"
+                    element={
+                      <MenuGuard kode="farmasi.resep">
+                        <ResepPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="laboratorium"
+                    element={
+                      <MenuGuard kode="laboratorium.order">
+                        <LabIndexPage />
                       </MenuGuard>
                     }
                   />

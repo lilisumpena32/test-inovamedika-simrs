@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { errorMessage } from '../../api/client'
@@ -100,6 +100,7 @@ export function IndexPage() {
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Kode</th>
+              <th className="px-4 py-3 font-medium">Stok</th>
               <th className="px-4 py-3 font-medium">Nama</th>
               <th className="px-4 py-3 font-medium">Satuan</th>
               <th className="px-4 py-3 font-medium">Harga jual</th>
@@ -112,7 +113,7 @@ export function IndexPage() {
           <tbody>
             {obats.isPending && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
                   Memuat...
                 </td>
               </tr>
@@ -120,7 +121,7 @@ export function IndexPage() {
 
             {!obats.isPending && (list?.items.length ?? 0) === 0 && (
               <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={7} className="px-4 py-6 text-center text-slate-500">
                   Belum ada obat.
                 </td>
               </tr>
@@ -129,6 +130,7 @@ export function IndexPage() {
             {list?.items.map((obat) => (
               <tr key={obat.id} className="border-b border-slate-100 last:border-0">
                 <td className="px-4 py-3 font-mono">{obat.kode_obat}</td>
+                <td className="px-4 py-3 tabular-nums">{obat.stok}</td>
                 <td className="px-4 py-3">{obat.nama_obat}</td>
                 <td className="px-4 py-3">{obat.satuan?.name ?? '-'}</td>
                 <td className="px-4 py-3 tabular-nums">

@@ -59,13 +59,13 @@ final class FixtureUser
 
     public static function pulihkanAksesRole(ApiTester $I, string $kodeRole): void
     {
-        $idMenuDashboard = (string) $I->grabFromDatabase('menu', 'id', ['kode' => 'dashboard']);
-        $idRole = self::idRole($I, $kodeRole);
-        $I->hapusBaris('DELETE FROM role_access WHERE role_id = ?', [$idRole]);
-        $I->eksekusi(
-            'INSERT INTO role_access (role_id, menu_id, can_view) VALUES (?, ?, true)',
-            [$idRole, $idMenuDashboard],
-        );
+        // Pulihan memakai rbac/init supaya matriks role selalu kembali ke
+        // sumber kebenaran di RbacController, bukan salinan yang bisa drift.
+        exec('cd /var/www/simrs && php yii rbac/init', $output, $kode);
+
+        if ($kode !== 0) {
+            throw new \RuntimeException('rbac/init gagal: ' . implode("\n", $output));
+        }
     }
 
     public static function pulihkanAdmin(ApiTester $I): void

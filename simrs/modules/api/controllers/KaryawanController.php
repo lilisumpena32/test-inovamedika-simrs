@@ -226,7 +226,7 @@ class KaryawanController extends ApiController
         ];
     }
 
-    private function teks(array $body, string $kunci, int $maks): ?string
+    protected function teks(array $body, string $kunci, int $maks): ?string
     {
         $nilai = trim((string) ($body[$kunci] ?? ''));
 

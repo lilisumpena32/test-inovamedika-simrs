@@ -24,7 +24,7 @@ class PasienController extends ApiController
 
     public function actionIndex(): array
     {
-        $this->butuh('master.pasien', 'view');
+        $this->butuh(['master.pasien', 'pendaftaran.kunjungan'], 'view');
 
         $request = Yii::$app->request;
         $q = trim((string) $request->get('q', ''));
@@ -169,7 +169,7 @@ class PasienController extends ApiController
         ];
     }
 
-    private function teks(array $body, string $kunci, int $maks): ?string
+    protected function teks(array $body, string $kunci, int $maks): ?string
     {
         $nilai = trim((string) ($body[$kunci] ?? ''));
 

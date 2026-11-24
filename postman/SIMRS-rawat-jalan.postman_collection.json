@@ -1,0 +1,161 @@
+{
+  "info": {
+    "name": "SIMRS Inova Medika - Rawat Jalan",
+    "_postman_id": "b8f1c0a2-0000-4a4b-9cde-000000000001",
+    "description": "Koleksi uji API SIMRS rawat jalan (Yii, prefix /api/v1). Set variabel baseUrl (mis. http://localhost:8080). Login dulu dengan folder Auth — token disimpan otomatis ke variabel token oleh skrip request login.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "token", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (simpan token)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const body = pm.response.json();",
+                  "if (body.data && body.data.token) pm.collectionVariables.set('token', body.data.token);",
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/auth/login",
+            "body": { "mode": "raw", "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}" }
+          }
+        },
+        { "name": "Profil saya", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/auth/me" } },
+        { "name": "Menu", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/menu" } }
+      ]
+    },
+    {
+      "name": "Pendaftaran",
+      "item": [
+        {
+          "name": "Daftar kunjungan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/kunjungan",
+            "body": { "mode": "raw", "raw": "{\n  \"idempotency_key\": \"kunci-unik-1\",\n  \"pasien_id\": \"<pasien_id>\",\n  \"jadwal_id\": \"<jadwal_id>\",\n  \"tgl_kunjungan\": \"2026-11-24\"\n}" }
+          }
+        },
+        {
+          "name": "Daftar kunjungan (ulang, idempotent)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/kunjungan",
+            "body": { "mode": "raw", "raw": "{\n  \"idempotency_key\": \"kunci-unik-1\",\n  \"pasien_id\": \"<pasien_id>\",\n  \"jadwal_id\": \"<jadwal_id>\",\n  \"tgl_kunjungan\": \"2026-11-24\"\n}" }
+          }
+        },
+        { "name": "List kunjungan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/kunjungan?tanggal={{tanggal}}&page=1" } },
+        { "name": "Antrean per poli", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/antrean?poli_id={{poli_id}}&tanggal={{tanggal}}" } },
+        { "name": "Batal kunjungan", "request": { "method": "PUT", "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/batal" } }
+      ]
+    },
+    {
+      "name": "Pemeriksaan (dokter)",
+      "item": [
+        {
+          "name": "Simpan pemeriksaan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/pemeriksaan",
+            "body": { "mode": "raw", "raw": "{\n  \"keluhan\": \"Demam 3 hari\",\n  \"anamnesis\": \"Demam, batuk\",\n  \"tensi\": \"120/80\",\n  \"suhu\": 38.5,\n  \"nadi\": 96,\n  \"diagnosis_utama\": \"Tonsilitis akut\"\n}" }
+          }
+        },
+        { "name": "Baca pemeriksaan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/pemeriksaan" } },
+        {
+          "name": "Tambah tindakan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/tindakan",
+            "body": { "mode": "raw", "raw": "{\n  \"tindakan_id\": \"<tindakan_id>\"\n}" }
+          }
+        },
+        { "name": "List tindakan kunjungan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/tindakan" } },
+        {
+          "name": "Minta lab",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/lab",
+            "body": { "mode": "raw", "raw": "{\n  \"jenis_lab_id\": \"<jenis_lab_id>\"\n}" }
+          }
+        },
+        { "name": "Baca order lab kunjungan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/lab" } },
+        { "name": "Selesai tanpa resep", "request": { "method": "PUT", "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/selesai" } }
+      ]
+    },
+    {
+      "name": "Laboratorium",
+      "item": [
+        { "name": "Daftar order lab", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/lab?tanggal={{tanggal}}&status=diminta" } },
+        {
+          "name": "Input hasil lab",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/lab/{{order_lab_id}}/hasil",
+            "body": { "mode": "raw", "raw": "{\n  \"hasil\": \"Leukosit naik 12.000\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Farmasi",
+      "item": [
+        {
+          "name": "Buat resep (dokter)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/kunjungan/{{kunjungan_id}}/resep",
+            "body": { "mode": "raw", "raw": "{\n  \"items\": [\n    { \"obat_id\": \"<obat_id>\", \"dosis\": \"1 tablet\", \"frekuensi\": \"3x sehari\", \"jumlah\": 9 }\n  ]\n}" }
+          }
+        },
+        { "name": "Daftar resep", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/farmasi/resep?tanggal={{tanggal}}&status=menunggu" } },
+        { "name": "Baca resep", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/resep/{{resep_id}}" } },
+        { "name": "Serahkan obat (FEFO)", "request": { "method": "PUT", "url": "{{baseUrl}}/api/v1/resep/{{resep_id}}/serah" } }
+      ]
+    },
+    {
+      "name": "Master",
+      "item": [
+        { "name": "List pasien", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/pasien?q=&page=1" } },
+        { "name": "List poli", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/poli" } },
+        { "name": "List karyawan dokter", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/karyawan?jabatan=dokter&is_active=true" } },
+        { "name": "List jadwal", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/jadwal?poli_id={{poli_id}}" } },
+        { "name": "Jadwal tersedia (kuota)", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/kunjungan/jadwal-tersedia?poli_id={{poli_id}}&tanggal={{tanggal}}" } },
+        { "name": "List obat", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obat?page=1" } },
+        { "name": "List tindakan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tindakan-list" } },
+        { "name": "List jenis lab", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/jenis-lab-list" } }
+      ]
+    },
+    {
+      "name": "Pengaturan",
+      "item": [
+        { "name": "List user", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/user?page=1" } },
+        { "name": "List role", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/role" } }
+      ]
+    }
+  ]
+}

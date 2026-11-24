@@ -7,14 +7,24 @@ namespace app\commands;
 use app\models\GolonganObat;
 use app\models\Jabatan;
 use app\models\JadwalPraktek;
+use app\models\JenisLab;
 use app\models\Kategori;
 use app\models\Karyawan;
+use app\models\Kunjungan;
+use app\models\MutasiObat;
 use app\models\Obat;
+use app\models\OrderLab;
 use app\models\Pasien;
+use app\models\Pemeriksaan;
+use app\models\PemeriksaanTindakan;
 use app\models\Poli;
+use app\models\Resep;
+use app\models\ResepObat;
 use app\models\Role;
 use app\models\Satuan;
 use app\models\Spesialis;
+use app\models\StokObat;
+use app\models\Tindakan;
 use app\models\User;
 use app\models\UserAccess;
 use Yii;
@@ -154,6 +164,32 @@ class SeedController extends Controller
         'Narkotika',
     ];
 
+    private const TINDAKAN_AWAL = [
+        // [nama, tarif]
+        ['Konsultasi poliklinik', 50000],
+        ['Injeksi intramuskular', 15000],
+        ['Perawatan luka', 30000],
+        ['Nebulisasi', 40000],
+        ['Pemasangan infus', 60000],
+        ['Elektrokardiografi', 80000],
+    ];
+
+    private const JENIS_LAB_AWAL = [
+        ['Darah lengkap', 90000],
+        ['Urine rutin', 40000],
+        ['Gula darah sewaktu', 35000],
+        ['Fungsi hati', 120000],
+    ];
+
+    private const KUNJUNGAN_DEMO = [
+        // [nama pasien, nama dokter, kode poli, status kunjungan]
+        ['Agus Setiawan', 'dr. Andi Pratama', 'POL-0001', 'menunggu'],
+        ['Bunga Lestari', 'dr. Sinta Maharani', 'POL-0003', 'menunggu'],
+        ['Candra Wijaya', 'dr. Andi Pratama', 'POL-0001', 'diperiksa'],
+        ['Dewi Anggraini', 'dr. Andi Pratama', 'POL-0001', 'menunggu_obat'],
+        ['Eko Prasetyo', 'dr. Hendra Wijaya', 'POL-0002', 'menunggu_bayar'],
+    ];
+
     private const OBAT_AWAL = [
         ['Paracetamol 500 mg', 'KTG-0001', 'GLG-0001', 'STN-0001', 800, 1500, 100],
         ['Ibuprofen 400 mg', 'KTG-0001', 'GLG-0002', 'STN-0001', 1500, 2500, 50],
@@ -196,6 +232,10 @@ class SeedController extends Controller
             $this->isiReferensiObat();
             $this->isiObat();
             $this->isiPasien();
+            $this->isiTindakan();
+            $this->isiJenisLab();
+            $this->isiStok();
+            $this->isiKunjunganDemo();
 
             $transaksi->commit();        } catch (\Throwable $e) {
             $transaksi->rollBack();
@@ -400,6 +440,244 @@ class SeedController extends Controller
 
             if (!$obat->save(false)) {
                 throw new \RuntimeException("gagal menyimpan obat {$nama}");
+            }
+        }
+    }
+
+    private function isiTindakan(): void
+    {
+        $nomor = (int) Yii::$app->db->createCommand(
+            "SELECT COALESCE(MAX(SUBSTRING(kode_tindakan FROM 5)::int), 0) FROM tindakan WHERE kode_tindakan LIKE 'TDN-%'",
+        )->queryScalar();
+
+        foreach (self::TINDAKAN_AWAL as [$nama, $tarif]) {
+            if (Tindakan::find()->where(['nama' => $nama])->exists()) {
+                continue;
+            }
+
+            $nomor++;
+            $tindakan = new Tindakan([
+                'kode_tindakan' => 'TDN-' . str_pad((string) $nomor, 4, '0', STR_PAD_LEFT),
+                'nama' => $nama,
+                'tarif' => $tarif,
+                'is_active' => true,
+            ]);
+
+            if (!$tindakan->save(false)) {
+                throw new \RuntimeException("gagal menyimpan tindakan {$nama}");
+            }
+        }
+    }
+
+    private function isiJenisLab(): void
+    {
+        $nomor = (int) Yii::$app->db->createCommand(
+            "SELECT COALESCE(MAX(SUBSTRING(kode_jenis_lab FROM 4)::int), 0) FROM jenis_lab WHERE kode_jenis_lab LIKE 'LB-%'",
+        )->queryScalar();
+
+        foreach (self::JENIS_LAB_AWAL as [$nama, $tarif]) {
+            if (JenisLab::find()->where(['nama' => $nama])->exists()) {
+                continue;
+            }
+
+            $nomor++;
+            $jenisLab = new JenisLab([
+                'kode_jenis_lab' => 'LB-' . str_pad((string) $nomor, 4, '0', STR_PAD_LEFT),
+                'nama' => $nama,
+                'tarif' => $tarif,
+                'is_active' => true,
+            ]);
+
+            if (!$jenisLab->save(false)) {
+                throw new \RuntimeException("gagal menyimpan jenis lab {$nama}");
+            }
+        }
+    }
+
+    private function isiStok(): void
+    {
+        $obats = Obat::find()->orderBy('kode_obat')->all();
+
+        foreach ($obats as $obat) {
+            if (StokObat::find()->where(['obat_id' => $obat->id])->exists()) {
+                continue;
+            }
+
+            // Dua batch: yang kadaluarsanya lebih dekat jumlahnya lebih kecil,
+            // dipakai untuk membuktikan alokasi FEFO saat penyerahan resep.
+            $batch = [
+                ['B-001', date('Y-m-d', strtotime('+6 months')), 30],
+                ['B-002', date('Y-m-d', strtotime('+18 months')), 120],
+            ];
+
+            foreach ($batch as [$noBatch, $kadaluarsa, $jumlah]) {
+                $stok = new StokObat([
+                    'obat_id' => (string) $obat->id,
+                    'no_batch' => $noBatch,
+                    'kadaluarsa' => $kadaluarsa,
+                    'jumlah' => $jumlah,
+                ]);
+
+                if (!$stok->save(false)) {
+                    throw new \RuntimeException("gagal menyimpan stok batch {$noBatch} untuk {$obat->nama_obat}");
+                }
+
+                $mutasi = new MutasiObat([
+                    'obat_id' => (string) $obat->id,
+                    'stok_obat_id' => (string) $stok->id,
+                    'jenis' => MutasiObat::JENIS_MASUK,
+                    'jumlah' => $jumlah,
+                    'referensi' => 'seed',
+                ]);
+
+                if (!$mutasi->save(false)) {
+                    throw new \RuntimeException("gagal menyimpan mutasi masuk untuk {$obat->nama_obat}");
+                }
+            }
+        }
+    }
+
+    private function isiKunjunganDemo(): void
+    {
+        $tanggal = date('Y-m-d');
+        $hari = (int) date('N');
+
+        foreach (self::KUNJUNGAN_DEMO as [$namaPasien, $namaDokter, $kodePoli, $status]) {
+            $pasien = Pasien::findOne(['nama' => $namaPasien]);
+            $dokter = Karyawan::findOne(['nama_karyawan' => $namaDokter]);
+            $poli = Poli::findOne(['kode' => $kodePoli]);
+            $jadwal = $dokter === null || $poli === null
+                ? null
+                : JadwalPraktek::find()
+                    ->where([
+                        'karyawan_id' => $dokter->id,
+                        'poli_id' => $poli->id,
+                        'hari' => $hari,
+                        'is_active' => true,
+                    ])
+                    ->one();
+
+            if ($pasien === null || $jadwal === null) {
+                // Hari ini bukan hari praktek dokter ini (mis. Minggu) — entri dilewati.
+                continue;
+            }
+
+            $kunci = 'seed-kunjungan-' . strtolower(str_replace(' ', '-', $namaPasien));
+
+            if (Kunjungan::find()->where(['idempotency_key' => $kunci])->exists()) {
+                continue;
+            }
+
+            $kunjungan = new Kunjungan([
+                'pasien_id' => (string) $pasien->id,
+                'dokter_id' => (string) $dokter->id,
+                'poli_id' => (string) $poli->id,
+                'jadwal_id' => (string) $jadwal->id,
+                'tgl_kunjungan' => $tanggal,
+                'status' => $status,
+                'biaya_daftar' => (float) $poli->biaya_daftar,
+                'idempotency_key' => $kunci,
+            ]);
+
+            $kunjungan->no_antrean = (int) Yii::$app->db->createCommand(
+                'INSERT INTO counter_antrean (poli_id, tanggal, nomor_terakhir)
+                 VALUES (:poli, :tanggal, 1)
+                 ON CONFLICT (poli_id, tanggal)
+                 DO UPDATE SET nomor_terakhir = counter_antrean.nomor_terakhir + 1,
+                               update_date = (now() AT TIME ZONE \'Asia/Jakarta\')
+                 RETURNING nomor_terakhir',
+                [':poli' => (string) $poli->id, ':tanggal' => $tanggal],
+            )->queryScalar();
+
+            $urut = (int) Yii::$app->db->createCommand('SELECT nextval(\'seq_kunjungan\')')->queryScalar();
+            $kunjungan->no_kunjungan = sprintf(
+                'KJ-%s-%04d',
+                str_replace('-', '', $tanggal),
+                $urut,
+            );
+
+            if (!$kunjungan->save(false)) {
+                throw new \RuntimeException("gagal menyimpan kunjungan demo {$namaPasien}");
+            }
+
+            $idKunjungan = (string) $kunjungan->id;
+
+            if (in_array($status, ['diperiksa', 'menunggu_obat', 'menunggu_bayar'], true)) {
+                $pemeriksaan = new Pemeriksaan([
+                    'kunjungan_id' => $idKunjungan,
+                    'keluhan' => 'Demam dan nyeri tubuh',
+                    'anamnesis' => 'Demam sejak 3 hari, batuk tidak berdahak',
+                    'tensi' => '120/80',
+                    'suhu' => 37.8,
+                    'nadi' => 92,
+                    'pernapasan' => 20,
+                    'hasil_fisik' => 'Kondisi umum cukup, tenggorokan kemerahan',
+                    'diagnosis_utama' => 'Infeksi virus non spesifik',
+                ]);
+
+                if (!$pemeriksaan->save(false)) {
+                    throw new \RuntimeException("gagal menyimpan pemeriksaan demo {$namaPasien}");
+                }
+            }
+
+            if ($status === 'diperiksa') {
+                $jenisLab = JenisLab::findOne(['nama' => 'Darah lengkap']);
+
+                if ($jenisLab !== null) {
+                    $order = new OrderLab([
+                        'kunjungan_id' => $idKunjungan,
+                        'jenis_lab_id' => (string) $jenisLab->id,
+                        'tarif' => (float) $jenisLab->tarif,
+                        'status' => OrderLab::STATUS_DIMINTA,
+                    ]);
+
+                    if (!$order->save(false)) {
+                        throw new \RuntimeException("gagal menyimpan order lab demo {$namaPasien}");
+                    }
+                }
+            }
+
+            if ($status === 'menunggu_obat') {
+                $obat = Obat::findOne(['nama_obat' => 'Paracetamol 500 mg']);
+
+                if ($obat !== null) {
+                    $resep = new Resep([
+                        'kunjungan_id' => $idKunjungan,
+                        'status' => Resep::STATUS_MENUNGGU,
+                    ]);
+
+                    if (!$resep->save(false)) {
+                        throw new \RuntimeException("gagal menyimpan resep demo {$namaPasien}");
+                    }
+
+                    $item = new ResepObat([
+                        'resep_id' => (string) $resep->id,
+                        'obat_id' => (string) $obat->id,
+                        'dosis' => '1 tablet',
+                        'frekuensi' => '3x sehari',
+                        'jumlah' => 9,
+                    ]);
+
+                    if (!$item->save(false)) {
+                        throw new \RuntimeException("gagal menyimpan item resep demo {$namaPasien}");
+                    }
+                }
+            }
+
+            if ($status === 'menunggu_bayar') {
+                $tindakan = Tindakan::findOne(['nama' => 'Perawatan luka']);
+
+                if ($tindakan !== null) {
+                    $detail = new PemeriksaanTindakan([
+                        'kunjungan_id' => $idKunjungan,
+                        'tindakan_id' => (string) $tindakan->id,
+                        'tarif' => (float) $tindakan->tarif,
+                    ]);
+
+                    if (!$detail->save(false)) {
+                        throw new \RuntimeException("gagal menyimpan tindakan demo {$namaPasien}");
+                    }
+                }
             }
         }
     }

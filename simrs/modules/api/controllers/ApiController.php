@@ -60,11 +60,39 @@ class ApiController extends Controller
         return [];
     }
 
-    protected function butuh(string $kodeMenu, string $aksi): void
+    protected function teks(array $body, string $kunci, int $maks): ?string
     {
-        if (!Yii::$app->access->can($kodeMenu, $aksi)) {
-            throw new ForbiddenHttpException('Anda tidak punya akses untuk aksi ini');
+        $nilai = $body[$kunci] ?? null;
+
+        if ($nilai === null || $nilai === '') {
+            return null;
         }
+
+        return mb_substr(trim((string) $nilai), 0, $maks);
+    }
+
+    protected function angka(array $body, string $kunci): ?int
+    {
+        $nilai = $body[$kunci] ?? null;
+
+        if ($nilai === null || $nilai === '') {
+            return null;
+        }
+
+        return (int) $nilai;
+    }
+
+    protected function butuh(array|string $kodeMenu, string $aksi): void
+    {
+        $daftar = is_array($kodeMenu) ? $kodeMenu : [$kodeMenu];
+
+        foreach ($daftar as $kode) {
+            if (Yii::$app->access->can($kode, $aksi)) {
+                return;
+            }
+        }
+
+        throw new ForbiddenHttpException('Anda tidak punya akses untuk aksi ini');
     }
 
     protected function sukses(mixed $data, int $kode = 200, string $pesan = ''): array

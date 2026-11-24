@@ -13,6 +13,7 @@ export type ObatRow = {
   harga_beli: number
   harga_jual: number
   stok_minimum: number
+  stok: number
   is_active: boolean
 }
 

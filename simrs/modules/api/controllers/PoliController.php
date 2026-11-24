@@ -23,7 +23,7 @@ class PoliController extends ApiController
 
     public function actionIndex(): array
     {
-        $this->butuh('master.poli', 'view');
+        $this->butuh(['master.poli', 'pendaftaran.kunjungan', 'pemeriksaan.daftar'], 'view');
 
         $request = Yii::$app->request;
         $q = trim((string) $request->get('q', ''));

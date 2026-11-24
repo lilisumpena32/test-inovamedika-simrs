@@ -26,7 +26,7 @@ class ObatController extends ApiController
 
     public function actionIndex(): array
     {
-        $this->butuh('farmasi.obat', 'view');
+        $this->butuh(['farmasi.obat', 'pemeriksaan.daftar'], 'view');
 
         $request = Yii::$app->request;
         $q = trim((string) $request->get('q', ''));
@@ -51,8 +51,10 @@ class ObatController extends ApiController
             ->limit($perHalaman)
             ->all();
 
+        $stok = $this->stokBanyak(array_map(fn (Obat $o) => (string) $o->id, $baris));
+
         return $this->sukses([
-            'items' => array_map(fn (Obat $o) => $this->ringkas($o), $baris),
+            'items' => array_map(fn (Obat $o) => $this->ringkas($o, $stok[(string) $o->id] ?? 0), $baris),
             'total' => $total,
             'page' => $halaman,
             'per' => $perHalaman,
@@ -165,7 +167,7 @@ class ObatController extends ApiController
         return $obat;
     }
 
-    private function ringkas(Obat $o): array
+    private function ringkas(Obat $o, ?int $stok = null): array
     {
         return [
             'id' => (string) $o->id,
@@ -183,8 +185,46 @@ class ObatController extends ApiController
             'harga_beli' => (float) $o->harga_beli,
             'harga_jual' => (float) $o->harga_jual,
             'stok_minimum' => (int) $o->stok_minimum,
+            'stok' => $stok ?? $this->stokTotal((string) $o->id),
             'is_active' => (bool) $o->is_active,
         ];
+    }
+
+    private function stokTotal(string $obatId): int
+    {
+        return (int) Yii::$app->db->createCommand(
+            'SELECT COALESCE(SUM(jumlah), 0) FROM stok_obat WHERE obat_id = :obat',
+            [':obat' => $obatId],
+        )->queryScalar();
+    }
+
+    private function stokBanyak(array $obatIds): array
+    {
+        if ($obatIds === []) {
+            return [];
+        }
+
+        $placeholders = [];
+        $params = [];
+
+        foreach (array_values($obatIds) as $i => $id) {
+            $placeholders[] = ':o' . $i;
+            $params[':o' . $i] = (string) $id;
+        }
+
+        $in = implode(', ', $placeholders);
+        $baris = Yii::$app->db->createCommand(
+            "SELECT obat_id, COALESCE(SUM(jumlah), 0) AS total FROM stok_obat WHERE obat_id IN ($in) GROUP BY obat_id",
+            $params,
+        )->queryAll();
+
+        $hasil = [];
+
+        foreach ($baris as $b) {
+            $hasil[(string) $b['obat_id']] = (int) $b['total'];
+        }
+
+        return $hasil;
     }
 
     private function validasi(Obat $o): ?string
