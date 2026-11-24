@@ -12,7 +12,12 @@ import { useToast } from '../../hooks/useToast'
 const schema = z.object({
   nama: z.string().min(1, 'Nama poli wajib diisi').max(64, 'Maksimal 64 karakter'),
   biaya_daftar: z.number().min(0, 'Tidak boleh minus'),
+  initial: z.string().regex(/^[A-Z]{3}$/, 'Initial antrean wajib 3 huruf'),
 })
+
+function besar(text: string): string {
+  return text.toUpperCase()
+}
 
 type PoliValues = z.infer<typeof schema>
 
@@ -70,7 +75,11 @@ function Form({ poli }: { poli: PoliRow }) {
     formState: { errors },
   } = useForm<PoliValues>({
     resolver: zodResolver(schema),
-    defaultValues: { nama: poli.nama, biaya_daftar: poli.biaya_daftar },
+    defaultValues: {
+      nama: poli.nama,
+      biaya_daftar: poli.biaya_daftar,
+      initial: poli.initial,
+    },
   })
 
   return (
@@ -94,6 +103,20 @@ function Form({ poli }: { poli: PoliRow }) {
           {...register('nama')}
         />
         {errors.nama && <p className="mt-1 text-xs text-red-600">{errors.nama.message}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="initial" className="mb-1.5 block text-sm font-medium">
+          Initial antrean
+        </label>
+        <input
+          id="initial"
+          type="text"
+          className="input uppercase"
+          aria-invalid={errors.initial !== undefined}
+          {...register('initial', { setValueAs: besar })}
+        />
+        {errors.initial && <p className="mt-1 text-xs text-red-600">{errors.initial.message}</p>}
       </div>
 
       <div>

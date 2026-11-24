@@ -99,12 +99,34 @@ class MasterCest
         $token = FixtureUser::token($I, 'admin', 'admin123');
         $I->haveHttpHeader('Authorization', 'Bearer ' . $token);
         $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->sendPOST('poli', ['kode' => 'UJIPOLI', 'nama' => 'Poli Uji', 'biaya_daftar' => 50000]);
 
+        $I->sendPOST('poli', [
+            'kode' => 'UJIPOLI',
+            'nama' => 'Poli Uji',
+            'biaya_daftar' => 50000,
+        ]);
+        $I->seeResponseCodeIs(422);
+        $I->seeResponseContainsJson(['message' => 'Initial antrean wajib 3 huruf']);
+
+        $I->sendPOST('poli', [
+            'kode' => 'UJIPOLI',
+            'nama' => 'Poli Uji',
+            'biaya_daftar' => 50000,
+            'initial' => 'uji',
+        ]);
         $I->seeResponseCodeIs(201);
-        $I->seeResponseContainsJson(['message' => 'Poli ditambahkan.', 'data' => ['biaya_daftar' => 50000]]);
+        $I->seeResponseContainsJson(['message' => 'Poli ditambahkan.', 'data' => ['initial' => 'UJI']]);
+        $idPoli = (string) $I->grabDataFromResponseByJsonPath('$.data.id')[0];
 
-        $I->sendPOST('poli', ['kode' => 'UJIPOLI', 'nama' => 'Poli Lain']);
+        $I->sendPUT('poli/' . $idPoli, ['nama' => 'Poli Uji', 'biaya_daftar' => 50000, 'initial' => 'THT']);
+        $I->seeResponseCodeIs(422);
+        $I->seeResponseContainsJson(['message' => 'Initial antrean sudah dipakai poli lain']);
+
+        $I->sendPUT('poli/' . $idPoli, ['nama' => 'Poli Uji', 'biaya_daftar' => 50000, 'initial' => 'UJI']);
+        $I->seeResponseCodeIs(200);
+        $I->seeResponseContainsJson(['data' => ['initial' => 'UJI']]);
+
+        $I->sendPOST('poli', ['kode' => 'UJIPOLI', 'nama' => 'Poli Lain', 'initial' => 'UJI']);
         $I->seeResponseCodeIs(422);
         $I->seeResponseContainsJson(['message' => 'Kode poli sudah dipakai']);
     }
@@ -368,7 +390,12 @@ class MasterCest
     private function buatPoli(ApiTester $I): string
     {
         $I->haveHttpHeader('Content-Type', 'application/json');
-        $I->sendPOST('poli', ['kode' => 'UJIPOLI', 'nama' => 'Poli Uji', 'biaya_daftar' => 50000]);
+        $I->sendPOST('poli', [
+            'kode' => 'UJIPOLI',
+            'nama' => 'Poli Uji',
+            'biaya_daftar' => 50000,
+            'initial' => 'UJP',
+        ]);
         $I->seeResponseCodeIs(201);
 
         return (string) $I->grabDataFromResponseByJsonPath('$.data.id')[0];

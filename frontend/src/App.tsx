@@ -9,6 +9,10 @@ import { IndexPage as DashboardPage } from './pages/dashboard/IndexPage'
 import { IndexPage as JadwalIndexPage } from './pages/jadwal/IndexPage'
 import { CreatePage as JadwalCreatePage } from './pages/jadwal/CreatePage'
 import { EditPage as JadwalEditPage } from './pages/jadwal/EditPage'
+import { IndexPage as KunjunganIndexPage } from './pages/kunjungan/IndexPage'
+import { ListPage as KunjunganListPage } from './pages/kunjungan/ListPage'
+import { EditPage as KunjunganEditPage } from './pages/kunjungan/EditPage'
+import { IndexPage as AntreanIndexPage } from './pages/antrean/IndexPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { IndexPage as KaryawanIndexPage } from './pages/karyawan/IndexPage'
 import { CreatePage as KaryawanCreatePage } from './pages/karyawan/CreatePage'
@@ -164,6 +168,39 @@ export default function App() {
                     element={
                       <MenuGuard kode="master.jadwal">
                         <JadwalEditPage />
+                      </MenuGuard>
+                    }
+                  />
+
+                  <Route
+                    path="pendaftaran"
+                    element={
+                      <MenuGuard kode="pendaftaran.kunjungan">
+                        <KunjunganIndexPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="pendaftaran/list"
+                    element={
+                      <MenuGuard kode="pendaftaran.kunjungan">
+                        <KunjunganListPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="pendaftaran/update/:id"
+                    element={
+                      <MenuGuard kode="pendaftaran.kunjungan">
+                        <KunjunganEditPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="antrean"
+                    element={
+                      <MenuGuard kode="pendaftaran.antrean">
+                        <AntreanIndexPage />
                       </MenuGuard>
                     }
                   />

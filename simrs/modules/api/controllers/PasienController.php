@@ -35,7 +35,7 @@ class PasienController extends ApiController
         $query = Pasien::find();
 
         if ($q !== '') {
-            $query->andWhere(['or', ['like', 'nama', $q], ['like', 'no_rm', $q], ['like', 'nik', $q]]);
+            $query->andWhere(['or', ['ilike', 'nama', $q], ['ilike', 'no_rm', $q], ['ilike', 'nik', $q]]);
         }
 
         if ($aktif === 'true' || $aktif === 'false') {

@@ -35,7 +35,7 @@ class ObatController extends ApiController
         $query = Obat::find()->with(['kategori', 'golonganObat', 'satuan']);
 
         if ($q !== '') {
-            $query->andWhere(['or', ['like', 'nama_obat', $q], ['like', 'kode_obat', $q]]);
+            $query->andWhere(['or', ['ilike', 'nama_obat', $q], ['ilike', 'kode_obat', $q]]);
         }
 
         if ($aktif === 'true' || $aktif === 'false') {

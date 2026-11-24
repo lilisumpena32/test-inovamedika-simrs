@@ -53,7 +53,7 @@ class UserController extends ApiController
         }
 
         if ($q !== '') {
-            $query->andWhere(['or', ['like', 'u.username', $q], ['like', 'u.full_name', $q]]);
+            $query->andWhere(['or', ['ilike', 'u.username', $q], ['ilike', 'u.full_name', $q]]);
         }
 
         if ($kodeRole !== '') {

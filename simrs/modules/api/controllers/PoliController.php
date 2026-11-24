@@ -32,7 +32,7 @@ class PoliController extends ApiController
         $query = Poli::find();
 
         if ($q !== '') {
-            $query->andWhere(['or', ['like', 'nama', $q], ['like', 'kode', $q]]);
+            $query->andWhere(['or', ['ilike', 'nama', $q], ['ilike', 'kode', $q]]);
         }
 
         if ($aktif === 'true' || $aktif === 'false') {
@@ -61,6 +61,7 @@ class PoliController extends ApiController
         $poli->kode = strtoupper(trim((string) ($body['kode'] ?? '')));
         $poli->nama = trim((string) ($body['nama'] ?? ''));
         $poli->biaya_daftar = (float) ($body['biaya_daftar'] ?? 0);
+        $poli->initial = strtoupper(trim((string) ($body['initial'] ?? '')));
         $poli->is_active = true;
 
         $galat = $this->validasi($poli);
@@ -82,13 +83,11 @@ class PoliController extends ApiController
 
         $poli->nama = trim((string) ($body['nama'] ?? ''));
         $poli->biaya_daftar = (float) ($body['biaya_daftar'] ?? 0);
+        $poli->initial = strtoupper(trim((string) ($body['initial'] ?? '')));
 
-        if ($poli->nama === '' || mb_strlen($poli->nama) > 64) {
-            return $this->gagal('Nama poli wajib diisi maksimal 64 karakter', 422);
-        }
-
-        if ($poli->biaya_daftar < 0) {
-            return $this->gagal('Biaya daftar tidak boleh minus', 422);
+        $galat = $this->validasi($poli, $poli->id);
+        if ($galat !== null) {
+            return $this->gagal($galat, 422);
         }
 
         $poli->save(false);
@@ -135,17 +134,24 @@ class PoliController extends ApiController
             'kode' => $poli->kode,
             'nama' => $poli->nama,
             'biaya_daftar' => (float) $poli->biaya_daftar,
+            'initial' => $poli->initial,
             'is_active' => (bool) $poli->is_active,
         ];
     }
 
-    private function validasi(Poli $poli): ?string
+    private function validasi(Poli $poli, ?string $idLain = null): ?string
     {
         if (!preg_match('/^[A-Z0-9_]{3,16}$/', $poli->kode)) {
             return 'Kode poli 3 sampai 16 karakter huruf besar, angka, atau garis bawah';
         }
 
-        if (Poli::find()->where(['kode' => $poli->kode])->exists()) {
+        $kodeSudah = Poli::find()->where(['kode' => $poli->kode]);
+
+        if ($idLain !== null) {
+            $kodeSudah->andWhere(['!=', 'id', $idLain]);
+        }
+
+        if ($kodeSudah->exists()) {
             return 'Kode poli sudah dipakai';
         }
 
@@ -157,7 +163,20 @@ class PoliController extends ApiController
             return 'Biaya daftar tidak boleh minus';
         }
 
+        if (!preg_match('/^[A-Z]{3}$/', $poli->initial)) {
+            return 'Initial antrean wajib 3 huruf';
+        }
+
+        $sudah = Poli::find()->where(['initial' => $poli->initial]);
+
+        if ($idLain !== null) {
+            $sudah->andWhere(['!=', 'id', $idLain]);
+        }
+
+        if ($sudah->exists()) {
+            return 'Initial antrean sudah dipakai poli lain';
+        }
+
         return null;
     }
 }
-

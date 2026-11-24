@@ -163,7 +163,7 @@ class AuthCest
         $I->haveHttpHeader('Authorization', 'Bearer ' . $token);
         $I->sendGET('menu');
         $I->seeResponseCodeIs(200);
-        $I->assertSame(['master', 'farmasi', 'pengaturan'], $I->grabDataFromResponseByJsonPath('$.data[*].kode'));
+        $I->assertSame(['master', 'pendaftaran', 'farmasi', 'pengaturan'], $I->grabDataFromResponseByJsonPath('$.data[*].kode'));
 
         $this->pulihkanAksesAdmin($I);
 
@@ -171,7 +171,7 @@ class AuthCest
         $I->sendGET('menu');
         $I->seeResponseCodeIs(200);
         $I->assertSame(
-            ['dashboard', 'master', 'farmasi', 'pengaturan'],
+            ['dashboard', 'master', 'pendaftaran', 'farmasi', 'pengaturan'],
             $I->grabDataFromResponseByJsonPath('$.data[*].kode'),
         );
     }

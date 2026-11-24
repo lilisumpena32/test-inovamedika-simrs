@@ -6,6 +6,7 @@ namespace app\commands;
 
 use app\models\GolonganObat;
 use app\models\Jabatan;
+use app\models\JadwalPraktek;
 use app\models\Kategori;
 use app\models\Karyawan;
 use app\models\Obat;
@@ -64,11 +65,12 @@ class SeedController extends Controller
     }
 
     private const POLI_AWAL = [
-        ['Umum', 30000],
-        ['Gigi', 45000],
-        ['Anak', 40000],
-        ['Kandungan', 60000],
-        ['THT', 50000],
+        // [nama, biaya daftar, initial antrean]
+        ['Umum', 30000, 'UMM'],
+        ['Gigi', 45000, 'GGI'],
+        ['Anak', 40000, 'ANK'],
+        ['Kandungan', 60000, 'KDG'],
+        ['THT', 50000, 'THT'],
     ];
 
     private const USER_AWAL = [
@@ -82,10 +84,38 @@ class SeedController extends Controller
     private const KARYAWAN_AWAL = [
         ['dr. Andi Pratama', 'L', '1990-03-15', 'dokter', 'umum', 'andi', '2018-01-01'],
         ['dr. Sinta Maharani', 'P', '1992-07-21', 'dokter', 'anak', null, '2020-02-01'],
+        ['dr. Hendra Wijaya', 'L', '1988-05-09', 'dokter', 'gigi', null, '2017-04-01'],
+        ['dr. Ratna Puspita', 'P', '1991-12-19', 'dokter', 'kandungan', null, '2019-09-01'],
+        ['dr. Fajar Nugroho', 'L', '1993-08-30', 'dokter', 'tht', null, '2021-05-01'],
         ['Rina Wulandari', 'P', '1994-11-02', 'perawat', null, null, '2019-06-01'],
         ['Maya Putri', 'P', '1993-02-17', 'apoteker', null, 'maya', '2019-08-01'],
         ['Budi Santoso', 'L', '1991-09-09', 'kasir', null, 'budi', '2021-01-01'],
         ['Sari Dewi', 'P', '1996-04-25', 'pendaftaran', null, 'sari', '2022-03-01'],
+    ];
+
+    private const JADWAL_AWAL = [
+        // [nama karyawan, kode poli, hari (1=Senin), jam mulai, jam selesai, kuota]
+        ['dr. Andi Pratama', 'POL-0001', 1, '08:00', '12:00', 20],
+        ['dr. Andi Pratama', 'POL-0001', 2, '08:00', '12:00', 20],
+        ['dr. Andi Pratama', 'POL-0001', 3, '08:00', '12:00', 20],
+        ['dr. Andi Pratama', 'POL-0001', 3, '13:00', '16:00', 15],
+        ['dr. Andi Pratama', 'POL-0001', 4, '08:00', '12:00', 20],
+        ['dr. Andi Pratama', 'POL-0001', 5, '08:00', '12:00', 20],
+        ['dr. Hendra Wijaya', 'POL-0002', 2, '08:00', '11:00', 15],
+        ['dr. Hendra Wijaya', 'POL-0002', 2, '13:00', '16:00', 12],
+        ['dr. Hendra Wijaya', 'POL-0002', 4, '08:00', '11:00', 15],
+        ['dr. Hendra Wijaya', 'POL-0002', 6, '08:00', '12:00', 10],
+        ['dr. Sinta Maharani', 'POL-0003', 1, '08:00', '12:00', 15],
+        ['dr. Sinta Maharani', 'POL-0003', 2, '13:00', '16:00', 12],
+        ['dr. Sinta Maharani', 'POL-0003', 3, '08:00', '12:00', 15],
+        ['dr. Sinta Maharani', 'POL-0003', 4, '13:00', '16:00', 12],
+        ['dr. Sinta Maharani', 'POL-0003', 5, '08:00', '12:00', 15],
+        ['dr. Ratna Puspita', 'POL-0004', 1, '13:00', '16:00', 10],
+        ['dr. Ratna Puspita', 'POL-0004', 3, '13:00', '16:00', 10],
+        ['dr. Ratna Puspita', 'POL-0004', 5, '08:00', '12:00', 10],
+        ['dr. Fajar Nugroho', 'POL-0005', 2, '08:00', '12:00', 12],
+        ['dr. Fajar Nugroho', 'POL-0005', 4, '08:00', '12:00', 12],
+        ['dr. Fajar Nugroho', 'POL-0005', 6, '09:00', '13:00', 10],
     ];
 
     private const SATUAN_AWAL = [
@@ -162,6 +192,7 @@ class SeedController extends Controller
             $this->isiPoli();
             $this->isiUser();
             $this->isiKaryawan();
+            $this->isiJadwal();
             $this->isiReferensiObat();
             $this->isiObat();
             $this->isiPasien();
@@ -180,14 +211,27 @@ class SeedController extends Controller
 
     private function isiPoli(): void
     {
-        foreach (self::POLI_AWAL as $i => [$nama, $biaya]) {
+        foreach (self::POLI_AWAL as $i => [$nama, $biaya, $initial]) {
             $kode = 'POL-' . str_pad((string) ($i + 1), 4, '0', STR_PAD_LEFT);
 
-            if (Poli::find()->where(['kode' => $kode])->exists()) {
+            $poli = Poli::findOne(['kode' => $kode]);
+
+            if ($poli !== null) {
+                // Poli lama dari sebelum ada kolom initial tetap diisi supaya mandatory terpenuhi.
+                if ((string) $poli->initial === '') {
+                    $poli->initial = $initial;
+                    $poli->save(false);
+                }
+
                 continue;
             }
 
-            $poli = new Poli(['kode' => $kode, 'nama' => $nama, 'biaya_daftar' => $biaya]);
+            $poli = new Poli([
+                'kode' => $kode,
+                'nama' => $nama,
+                'biaya_daftar' => $biaya,
+                'initial' => $initial,
+            ]);
 
             if (!$poli->save(false)) {
                 throw new \RuntimeException("gagal menyimpan poli {$kode}");
@@ -261,6 +305,45 @@ class SeedController extends Controller
         }
     }
 
+    private function isiJadwal(): void
+    {
+        foreach (self::JADWAL_AWAL as [$namaKaryawan, $kodePoli, $hari, $jamMulai, $jamSelesai, $kuota]) {
+            $karyawan = Karyawan::findOne(['nama_karyawan' => $namaKaryawan]);
+            $poli = Poli::findOne(['kode' => $kodePoli]);
+
+            if ($karyawan === null || $poli === null) {
+                throw new \RuntimeException("data jadwal belum lengkap untuk {$namaKaryawan} / {$kodePoli}");
+            }
+
+            $sudah = JadwalPraktek::find()
+                ->where([
+                    'karyawan_id' => $karyawan->id,
+                    'poli_id' => $poli->id,
+                    'hari' => $hari,
+                    'jam_mulai' => $jamMulai,
+                ])
+                ->exists();
+
+            if ($sudah) {
+                continue;
+            }
+
+            $jadwal = new JadwalPraktek([
+                'karyawan_id' => (string) $karyawan->id,
+                'poli_id' => (string) $poli->id,
+                'hari' => $hari,
+                'jam_mulai' => $jamMulai,
+                'jam_selesai' => $jamSelesai,
+                'kuota' => $kuota,
+            ]);
+            $jadwal->is_active = true;
+
+            if (!$jadwal->save(false)) {
+                throw new \RuntimeException("gagal menyimpan jadwal {$namaKaryawan} / {$kodePoli} / hari {$hari}");
+            }
+        }
+    }
+
     private function isiReferensiObat(): void
     {
         $tabel = [
@@ -297,11 +380,12 @@ class SeedController extends Controller
         )->queryScalar();
 
         foreach (self::OBAT_AWAL as [$nama, $kodeKategori, $kodeGolongan, $kodeSatuan, $beli, $jual, $minimum]) {
-            $kode = 'OBT-' . str_pad((string) (++$nomorObat), 4, '0', STR_PAD_LEFT);
-
-            if (Obat::find()->where(['kode_obat' => $kode])->exists()) {
+            if (Obat::find()->where(['nama_obat' => $nama])->exists()) {
                 continue;
             }
+
+            $nomorObat++;
+            $kode = 'OBT-' . str_pad((string) $nomorObat, 4, '0', STR_PAD_LEFT);
 
             $obat = new Obat([
                 'kode_obat' => $kode,

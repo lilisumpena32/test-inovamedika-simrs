@@ -48,6 +48,7 @@ export function IndexPage() {
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Kode</th>
               <th className="px-4 py-3 font-medium">Nama</th>
+              <th className="px-4 py-3 font-medium">Initial antrean</th>
               <th className="px-4 py-3 font-medium">Biaya daftar</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3">
@@ -58,7 +59,7 @@ export function IndexPage() {
           <tbody>
             {polis.isPending && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                   Memuat...
                 </td>
               </tr>
@@ -66,7 +67,7 @@ export function IndexPage() {
 
             {polis.isError && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                   {polis.error.message}
                 </td>
               </tr>
@@ -74,7 +75,7 @@ export function IndexPage() {
 
             {polis.data?.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-4 py-6 text-center text-slate-500">
                   Belum ada poli.
                 </td>
               </tr>
@@ -84,6 +85,7 @@ export function IndexPage() {
               <tr key={poli.id} className="border-b border-slate-100 last:border-0">
                 <td className="px-4 py-3 font-mono">{poli.kode}</td>
                 <td className="px-4 py-3">{poli.nama}</td>
+                <td className="px-4 py-3 font-mono">{poli.initial}</td>
                 <td className="px-4 py-3 tabular-nums">
                   {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR' }).format(
                     poli.biaya_daftar,

@@ -14,7 +14,12 @@ const schema = z.object({
     .regex(/^[A-Z0-9_]{3,16}$/, 'Kode 3 sampai 16 karakter huruf besar, angka, atau garis bawah'),
   nama: z.string().min(1, 'Nama poli wajib diisi').max(64, 'Maksimal 64 karakter'),
   biaya_daftar: z.number().min(0, 'Tidak boleh minus'),
+  initial: z.string().regex(/^[A-Z]{3}$/, 'Initial antrean wajib 3 huruf'),
 })
+
+function besar(text: string): string {
+  return text.toUpperCase()
+}
 
 type PoliValues = z.infer<typeof schema>
 
@@ -39,7 +44,7 @@ export function CreatePage() {
     formState: { errors },
   } = useForm<PoliValues>({
     resolver: zodResolver(schema),
-    defaultValues: { kode: '', nama: '', biaya_daftar: 0 },
+    defaultValues: { kode: '', nama: '', biaya_daftar: 0, initial: '' },
   })
 
   return (
@@ -71,6 +76,20 @@ export function CreatePage() {
           {...register('nama')}
         />
         {errors.nama && <p className="mt-1 text-xs text-red-600">{errors.nama.message}</p>}
+      </div>
+
+      <div>
+        <label htmlFor="initial" className="mb-1.5 block text-sm font-medium">
+          Initial antrean
+        </label>
+        <input
+          id="initial"
+          type="text"
+          className="input uppercase"
+          aria-invalid={errors.initial !== undefined}
+          {...register('initial', { setValueAs: besar })}
+        />
+        {errors.initial && <p className="mt-1 text-xs text-red-600">{errors.initial.message}</p>}
       </div>
 
       <div>

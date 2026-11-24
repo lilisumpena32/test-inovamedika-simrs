@@ -6,12 +6,14 @@ export type PoliRow = {
   kode: string
   nama: string
   biaya_daftar: number
+  initial: string
   is_active: boolean
 }
 
 export type PoliInput = {
   nama: string
   biaya_daftar: number
+  initial: string
 }
 
 export async function listPolis(): Promise<PoliRow[]> {

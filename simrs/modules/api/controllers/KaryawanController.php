@@ -37,7 +37,7 @@ class KaryawanController extends ApiController
         $query = Karyawan::find()->with(['jabatan', 'spesialis', 'user']);
 
         if ($q !== '') {
-            $query->andWhere(['or', ['like', 'nama_karyawan', $q], ['like', 'kode_karyawan', $q]]);
+            $query->andWhere(['or', ['ilike', 'nama_karyawan', $q], ['ilike', 'kode_karyawan', $q]]);
         }
 
         if ($kodeJabatan !== '') {
