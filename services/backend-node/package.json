@@ -1,0 +1,14 @@
+{
+  "name": "backend-node",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Backend services Node.js: bridge lab (outbox worker) dan REST API dashboard read-only",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "pg": "^8.12.0"
+  }
+}

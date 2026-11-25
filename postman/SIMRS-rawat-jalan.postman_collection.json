@@ -7,7 +7,27 @@
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080" },
-    { "key": "token", "value": "" }
+    { "key": "token", "value": "" },
+    { "key": "tanggal", "value": "", "description": "Diisi otomatis tanggal hari ini oleh pre-request script; ubah bila menguji tanggal lain (YYYY-MM-DD)." },
+    { "key": "poli_id", "value": "", "description": "Opsional: ID poli untuk request antrean/jadwal tersedia." },
+    { "key": "kunjungan_id", "value": "", "description": "ID kunjungan untuk request pemeriksaan, lab, resep, dan tagihan." },
+    { "key": "tagihan_id", "value": "", "description": "ID tagihan dari respons Buat/List tagihan." },
+    { "key": "nominal_bayar", "value": "10000", "description": "Nominal pembayaran (angka, tanpa pemisah ribuan); tidak boleh melebihi sisa tagihan." }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "if (!pm.variables.get('tanggal')) {",
+          "  const now = new Date();",
+          "  const lokal = new Date(now.getTime() - now.getTimezoneOffset() * 60000);",
+          "  pm.variables.set('tanggal', lokal.toISOString().slice(0, 10));",
+          "}"
+        ]
+      }
+    }
   ],
   "auth": {
     "type": "bearer",
@@ -138,6 +158,31 @@
       ]
     },
     {
+      "name": "Tagihan",
+      "item": [
+        {
+          "name": "Buat tagihan",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/tagihan",
+            "body": { "mode": "raw", "raw": "{\n  \"kunjungan_id\": \"{{kunjungan_id}}\"\n}" }
+          }
+        },
+        { "name": "List tagihan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tagihan?tanggal={{tanggal}}&page=1" } },
+        { "name": "Detail tagihan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tagihan/{{tagihan_id}}" } },
+        {
+          "name": "Bayar tagihan",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/api/v1/tagihan/{{tagihan_id}}/bayar",
+            "body": { "mode": "raw", "raw": "{\n  \"idempotency_key\": \"{{$guid}}\",\n  \"metode\": \"tunai\",\n  \"nominal\": {{nominal_bayar}}\n}" }
+          }
+        }
+      ]
+    },
+    {
       "name": "Master",
       "item": [
         { "name": "List pasien", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/pasien?q=&page=1" } },
@@ -155,6 +200,15 @@
       "item": [
         { "name": "List user", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/user?page=1" } },
         { "name": "List role", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/role" } }
+      ]
+    },
+    {
+      "name": "Laporan",
+      "item": [
+        { "name": "Ringkasan operasional", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/dashboard/ringkasan?dari={{tanggal}}&sampai={{tanggal}}" } },
+        { "name": "Pendapatan", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/dashboard/pendapatan?dari={{tanggal}}&sampai={{tanggal}}" } },
+        { "name": "Obat terpakai", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/dashboard/obat?dari={{tanggal}}&sampai={{tanggal}}" } },
+        { "name": "Dashboard (Node)", "request": { "method": "GET", "url": "http://localhost:3001/api/dashboard?dari={{tanggal}}&sampai={{tanggal}}" } }
       ]
     }
   ]

@@ -19,7 +19,7 @@ export function IndexPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Kunjungan</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">Kunjungan</h1>
         <Link
           to="/pendaftaran/list"
           className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"

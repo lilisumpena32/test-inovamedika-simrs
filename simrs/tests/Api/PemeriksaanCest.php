@@ -28,6 +28,7 @@ class PemeriksaanCest
 
     private function bersihkan(ApiTester $I): void
     {
+        $I->hapusBaris('DELETE FROM outbox_lab WHERE order_lab_id IN (SELECT id FROM order_lab WHERE kunjungan_id IN (SELECT id FROM kunjungan WHERE no_kunjungan LIKE ?))', ['KJ-%']);
         $I->hapusBaris('DELETE FROM order_lab WHERE kunjungan_id IN (SELECT id FROM kunjungan WHERE no_kunjungan LIKE ?)', ['KJ-%']);
         $I->hapusBaris('DELETE FROM pemeriksaan_tindakan WHERE kunjungan_id IN (SELECT id FROM kunjungan WHERE no_kunjungan LIKE ?)', ['KJ-%']);
         $I->hapusBaris('DELETE FROM pemeriksaan WHERE kunjungan_id IN (SELECT id FROM kunjungan WHERE no_kunjungan LIKE ?)', ['KJ-%']);
@@ -164,6 +165,65 @@ class PemeriksaanCest
         $I->seeResponseContainsJson(['data' => ['status' => 'menunggu_bayar']]);
     }
 
+    public function orderLabMasukOutbox(ApiTester $I): void
+    {
+        $kunjungan = $this->kunjunganUji($I);
+        $idJenisLab = (string) $I->grabFromDatabase('jenis_lab', 'id', ['nama' => 'Urine rutin']);
+
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->tokenDokter);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('kunjungan/' . $kunjungan['id'] . '/lab', ['jenis_lab_id' => $idJenisLab]);
+        $I->seeResponseCodeIs(201);
+        $idOrder = (string) $I->grabDataFromResponseByJsonPath('$.data.id')[0];
+
+        $I->assertSame(
+            1,
+            (int) $I->grabNumRecords('outbox_lab', ['order_lab_id' => $idOrder, 'status' => 'pending']),
+        );
+        $payload = (string) $I->grabFromDatabase('outbox_lab', 'payload', ['order_lab_id' => $idOrder]);
+        $I->assertStringContainsString('Urine rutin', $payload);
+    }
+
+    public function pullHasilMenerapkanHasilEksternal(ApiTester $I): void
+    {
+        $kunjungan = $this->kunjunganUji($I);
+        $idJenisLab = (string) $I->grabFromDatabase('jenis_lab', 'id', ['nama' => 'Gula darah sewaktu']);
+
+        $I->haveHttpHeader('Authorization', 'Bearer ' . $this->tokenDokter);
+        $I->haveHttpHeader('Content-Type', 'application/json');
+        $I->sendPOST('kunjungan/' . $kunjungan['id'] . '/lab', ['jenis_lab_id' => $idJenisLab]);
+        $I->seeResponseCodeIs(201);
+        $idOrder = (string) $I->grabDataFromResponseByJsonPath('$.data.id')[0];
+
+        $I->eksekusi(
+            "UPDATE outbox_lab SET status = 'sent', hasil = ? WHERE order_lab_id = ?",
+            ['GDS 148 mg/dL', $idOrder],
+        );
+
+        $params = require dirname(__DIR__, 2) . '/config/params.php';
+        $I->haveHttpHeader('X-Api-Key', $params['labApiKey']);
+        $I->sendPOST('lab/pull-hasil');
+        $I->seeResponseCodeIs(200);
+        $I->seeResponseContainsJson(['data' => ['diterapkan' => 1]]);
+
+        $I->assertSame(
+            'selesai',
+            (string) $I->grabFromDatabase('order_lab', 'status', ['id' => $idOrder]),
+        );
+        $I->assertSame(
+            'GDS 148 mg/dL',
+            (string) $I->grabFromDatabase('order_lab', 'hasil', ['id' => $idOrder]),
+        );
+        $I->assertSame(
+            'applied',
+            (string) $I->grabFromDatabase('outbox_lab', 'status', ['order_lab_id' => $idOrder]),
+        );
+
+        $I->haveHttpHeader('X-Api-Key', 'salah');
+        $I->sendPOST('lab/pull-hasil');
+        $I->seeResponseCodeIs(401);
+    }
+
     public function kasirDitolak(ApiTester $I): void
     {
         FixtureUser::buat($I, FixtureUser::KASIR, FixtureUser::PASSWORD_KASIR, 'kasir');
@@ -185,7 +245,6 @@ class PemeriksaanCest
         $idJadwal = (string) $I->grabFromDatabase('jadwal_praktek', 'id', ['karyawan_id' => $idKaryawan, 'hari' => 1]);
         $idPoli = (string) $I->grabFromDatabase('poli', 'id', ['kode' => 'POL-0001']);
 
-        // Tanggal Senin terdekat, cocok dengan hari jadwal dr. Andi.
         $tanggal = '';
         for ($i = 1; $i <= 7; $i++) {
             $t = date('Y-m-d', strtotime("+{$i} days"));

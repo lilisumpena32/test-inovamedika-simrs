@@ -27,7 +27,7 @@ class KunjunganController extends ApiController
 
     public function actionIndex(): array
     {
-        $this->butuh(['pendaftaran.kunjungan', 'pemeriksaan.daftar'], 'view');
+        $this->butuh(['pendaftaran.kunjungan', 'pemeriksaan.daftar', 'kasir.tagihan'], 'view');
 
         $request = Yii::$app->request;
         $tanggal = trim((string) $request->get('tanggal', ''));

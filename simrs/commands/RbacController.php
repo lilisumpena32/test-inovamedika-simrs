@@ -46,6 +46,10 @@ class RbacController extends Controller
         ['kode' => 'farmasi.resep', 'parent' => 'farmasi', 'label' => 'Resep', 'path' => '/farmasi/resep', 'icon' => 'prescription', 'sorter' => 32],
         ['kode' => 'laboratorium', 'parent' => null, 'label' => 'Laboratorium', 'path' => null, 'icon' => 'flask-conical', 'sorter' => 40],
         ['kode' => 'laboratorium.order', 'parent' => 'laboratorium', 'label' => 'Order Lab', 'path' => '/laboratorium', 'icon' => 'flask-conical', 'sorter' => 41],
+        ['kode' => 'kasir', 'parent' => null, 'label' => 'Kasir', 'path' => null, 'icon' => 'receipt', 'sorter' => 45],
+        ['kode' => 'kasir.tagihan', 'parent' => 'kasir', 'label' => 'Tagihan', 'path' => '/kasir', 'icon' => 'receipt', 'sorter' => 46],
+        ['kode' => 'laporan', 'parent' => null, 'label' => 'Laporan', 'path' => null, 'icon' => 'bar-chart-3', 'sorter' => 50],
+        ['kode' => 'laporan.operasional', 'parent' => 'laporan', 'label' => 'Operasional', 'path' => '/laporan', 'icon' => 'bar-chart-3', 'sorter' => 51],
         ['kode' => 'pengaturan', 'parent' => null, 'label' => 'Pengaturan', 'path' => null, 'icon' => 'settings', 'sorter' => 90],
         ['kode' => 'pengaturan.user', 'parent' => 'pengaturan', 'label' => 'User', 'path' => '/setting/user', 'icon' => 'users', 'sorter' => 91],
         ['kode' => 'pengaturan.role', 'parent' => 'pengaturan', 'label' => 'Role', 'path' => '/setting/role', 'icon' => 'shield', 'sorter' => 92],
@@ -66,6 +70,8 @@ class RbacController extends Controller
             'farmasi.obat' => ['view', 'create', 'update'],
             'farmasi.resep' => ['view', 'update'],
             'laboratorium.order' => ['view', 'update'],
+            'kasir.tagihan' => ['view', 'create'],
+            'laporan.operasional' => ['view'],
             'pengaturan.user' => ['view', 'create', 'update', 'delete'],
             'pengaturan.role' => ['view', 'create', 'update'],
         ],
@@ -89,6 +95,8 @@ class RbacController extends Controller
         ],
         'kasir' => [
             'dashboard' => ['view'],
+            'kasir.tagihan' => ['view', 'create'],
+            'laporan.operasional' => ['view'],
         ],
     ];
 
@@ -219,20 +227,31 @@ class RbacController extends Controller
 
     private function simpanRoleAccess(array $role, array $menu): void
     {
+        // rbac/init adalah sumber kebenaran matriks: baris yang tidak lagi
+        // tercantum di MATRIX dihapus dan flag baris yang ada diselaraskan,
+        // supaya sisa uji/perubahan manual tidak membuka menu terlarang.
         foreach (self::MATRIX as $kodeRole => $daftar) {
-            foreach ($daftar as $kodeMenu => $hak) {
+            foreach (self::MENUS as $item) {
+                $kodeMenu = $item['kode'];
+                $hak = $daftar[$kodeMenu] ?? null;
                 $akses = RoleAccess::find()
                     ->where(['role_id' => $role[$kodeRole], 'menu_id' => $menu[$kodeMenu]])
                     ->one();
 
-                if ($akses !== null) {
+                if ($hak === null) {
+                    if ($akses !== null) {
+                        $akses->delete();
+                    }
+
                     continue;
                 }
 
-                $akses = new RoleAccess([
-                    'role_id' => $role[$kodeRole],
-                    'menu_id' => $menu[$kodeMenu],
-                ]);
+                if ($akses === null) {
+                    $akses = new RoleAccess([
+                        'role_id' => $role[$kodeRole],
+                        'menu_id' => $menu[$kodeMenu],
+                    ]);
+                }
 
                 foreach (self::HAK as $aksi) {
                     $akses->setAttribute('can_' . $aksi, in_array($aksi, $hak, true));

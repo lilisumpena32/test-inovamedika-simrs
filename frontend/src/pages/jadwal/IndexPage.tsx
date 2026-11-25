@@ -5,6 +5,7 @@ import { errorMessage } from '../../api/client'
 import { listJadwals, namaHari, setJadwalStatus } from '../../api/jadwal'
 import { listKaryawans } from '../../api/karyawan'
 import { AksiMenu } from '../../components/AksiMenu'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { Can } from '../../auth/MenuGuard'
 import { useSession } from '../../auth/session'
 import { useToast } from '../../hooks/useToast'
@@ -40,7 +41,7 @@ export function IndexPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">List Jadwal</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">List Jadwal</h1>
         <Can kode="master.jadwal" action="can_create">
           <button
             type="button"
@@ -53,22 +54,23 @@ export function IndexPage() {
       </header>
 
       <section className="card">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3">
-          <select
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 [&>*]:w-full sm:[&>*]:w-56">
+          <SearchableSelect
             value={filterDokter}
-            onChange={(e) => setFilterDokter(e.target.value)}
-            className="select"
-            aria-label="Filter dokter"
-          >
-            <option value="">Semua dokter</option>
-            {(dokters.data ?? []).map((dokter) => (
-              <option key={dokter.id} value={dokter.id}>
-                {dokter.nama_karyawan}
-              </option>
-            ))}
-          </select>
+            onChange={setFilterDokter}
+            options={[
+              { label: 'Semua dokter', value: '' },
+              ...(dokters.data ?? []).map((dokter) => ({
+                label: dokter.nama_karyawan,
+                value: dokter.id,
+              })),
+            ]}
+            placeholder="Semua dokter"
+            ariaLabel="Filter dokter"
+          />
         </div>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Dokter</th>
@@ -149,6 +151,7 @@ export function IndexPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   )

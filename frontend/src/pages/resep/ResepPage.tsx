@@ -52,7 +52,7 @@ export function ResepPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Resep {kunjungan?.kode_antrean ?? ''}</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">Resep {kunjungan?.kode_antrean ?? ''}</h1>
         <Link to="/farmasi/resep" className="text-sm font-medium text-teal-700 underline">
           Kembali
         </Link>
@@ -70,7 +70,8 @@ export function ResepPage() {
       </section>
 
       <section className="card">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[32rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Obat</th>
@@ -93,6 +94,7 @@ export function ResepPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       {data.status === 'menunggu' && (

@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { listResep } from '../../api/resep'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { errorMessage } from '../../api/client'
 import { tanggalHariIni } from '../../lib/tanggal'
 
@@ -18,10 +19,10 @@ export function IndexPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Resep</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Resep</h1>
 
       <section className="card">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 [&>*]:w-full sm:[&>*]:w-56">
           <input
             type="date"
             value={tanggal}
@@ -29,16 +30,17 @@ export function IndexPage() {
             className="input max-w-[10rem]"
             aria-label="Tanggal"
           />
-          <select
+          <SearchableSelect
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="select"
-            aria-label="Filter status"
-          >
-            <option value="menunggu">Menunggu</option>
-            <option value="selesai">Selesai</option>
-            <option value="">Semua status</option>
-          </select>
+            onChange={setStatus}
+            options={[
+              { label: 'Menunggu', value: 'menunggu' },
+              { label: 'Selesai', value: 'selesai' },
+              { label: 'Semua status', value: '' },
+            ]}
+            placeholder="Semua status"
+            ariaLabel="Filter status"
+          />
         </div>
 
         {reseps.isError && (
@@ -57,7 +59,8 @@ export function IndexPage() {
           </div>
         )}
 
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Antrean</th>
@@ -111,6 +114,7 @@ export function IndexPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   )

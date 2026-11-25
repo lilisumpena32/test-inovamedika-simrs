@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { errorMessage } from '../../api/client'
 import { listJenisLabMaster, setJenisLabStatus } from '../../api/jenislab'
 import { AksiMenu } from '../../components/AksiMenu'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { Can } from '../../auth/MenuGuard'
 import { useSession } from '../../auth/session'
 import { useDebounced } from '../../hooks/useDebounced'
@@ -42,7 +43,7 @@ export function IndexPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">List Jenis Lab</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">List Jenis Lab</h1>
         <Can kode="master.jenis-lab" action="can_create">
           <button
             type="button"
@@ -55,7 +56,7 @@ export function IndexPage() {
       </header>
 
       <section className="card">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 [&>*]:w-full sm:[&>*]:w-56">
           <input
             type="search"
             value={q}
@@ -64,19 +65,21 @@ export function IndexPage() {
             className="input max-w-xs"
             aria-label="Cari jenis lab"
           />
-          <select
+          <SearchableSelect
             value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="select"
-            aria-label="Filter status"
-          >
-            <option value="">Semua status</option>
-            <option value="true">Aktif</option>
-            <option value="false">Nonaktif</option>
-          </select>
+            onChange={setStatus}
+            options={[
+              { label: 'Semua status', value: '' },
+              { label: 'Aktif', value: 'true' },
+              { label: 'Nonaktif', value: 'false' },
+            ]}
+            placeholder="Semua status"
+            ariaLabel="Filter status"
+          />
         </div>
 
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Kode</th>
@@ -143,6 +146,7 @@ export function IndexPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   )

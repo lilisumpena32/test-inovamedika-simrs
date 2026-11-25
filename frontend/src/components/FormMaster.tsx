@@ -16,10 +16,10 @@ export function FormMaster({
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">{judul}</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">{judul}</h1>
 
       <form
-        className="card max-w-xl space-y-4 p-5"
+        className="card max-w-xl space-y-4 p-4 sm:p-5"
         onSubmit={(e) => {
           e.preventDefault()
           onSubmit()

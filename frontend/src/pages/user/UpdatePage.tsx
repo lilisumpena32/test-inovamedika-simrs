@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { errorMessage } from '../../api/client'
 import { listRoles } from '../../api/role'
 import { getUser, updateUser } from '../../api/user'
 import type { UserRow } from '../../api/user'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
@@ -75,6 +76,7 @@ function Form({ user }: { user: UserRow }) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<UserValues>({
     resolver: zodResolver(schema),
@@ -87,7 +89,7 @@ function Form({ user }: { user: UserRow }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Ubah User</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Ubah User</h1>
 
       <form
         className="card max-w-xl space-y-4 p-5"
@@ -135,22 +137,32 @@ function Form({ user }: { user: UserRow }) {
           <label htmlFor="role_id" className="mb-1.5 block text-sm font-medium">
             Role
           </label>
-          <select
-            id="role_id"
-            className="input"
-            aria-invalid={errors.role_id !== undefined}
-            {...register('role_id')}
-          >
-            <option value="">Pilih role</option>
-            {(roles.data ?? []).map((role) => (
-              <option key={role.id} value={role.id}>
-                {role.name}
-              </option>
-            ))}
-          </select>
-          {errors.role_id && (
-            <p className="mt-1 text-xs text-red-600">{errors.role_id.message}</p>
-          )}
+          <Controller
+            control={control}
+            name="role_id"
+            render={({ field }) => (
+              <>
+                <SearchableSelect
+                  id="role_id"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: 'Pilih role', value: '' },
+                    ...(roles.data ?? []).map((role) => ({
+                      label: role.name,
+                      value: role.id,
+                    })),
+                  ]}
+                  placeholder="Pilih role"
+                  ariaLabel="Role"
+                  invalid={errors.role_id !== undefined}
+                />
+                {errors.role_id && (
+                  <p className="mt-1 text-xs text-red-600">{errors.role_id.message}</p>
+                )}
+              </>
+            )}
+          />
         </div>
 
         <div className="flex flex-wrap gap-2 pt-2">

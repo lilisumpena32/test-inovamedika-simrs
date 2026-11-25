@@ -7,6 +7,7 @@ namespace app\modules\api\controllers;
 use app\models\JenisLab;
 use app\models\Kunjungan;
 use app\models\OrderLab;
+use app\models\OutboxLab;
 use app\models\Pemeriksaan;
 use app\models\PemeriksaanTindakan;
 use app\models\Tindakan;
@@ -208,6 +209,18 @@ class PemeriksaanController extends ApiController
             'status' => OrderLab::STATUS_DIMINTA,
         ]);
         $order->save(false);
+
+        $outbox = new OutboxLab([
+            'order_lab_id' => (string) $order->id,
+            'payload' => [
+                'order_id' => (string) $order->id,
+                'kode' => $kunjungan->no_kunjungan,
+                'jenis' => $jenisLab->nama,
+                'pasien' => $kunjungan->pasien === null ? '-' : $kunjungan->pasien->nama,
+            ],
+            'status' => OutboxLab::STATUS_PENDING,
+        ]);
+        $outbox->save(false);
 
         return $this->sukses($this->ringkasLab($order), 201, 'Order lab ditambahkan.');
     }

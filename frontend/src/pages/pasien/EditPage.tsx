@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { errorMessage } from '../../api/client'
 import { getPasien, updatePasien } from '../../api/pasien'
 import type { PasienRow } from '../../api/pasien'
 import { FormMaster } from '../../components/FormMaster'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
@@ -79,6 +80,7 @@ function Form({ pasien }: { pasien: PasienRow }) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<PasienValues>({
     resolver: zodResolver(schema),
@@ -140,15 +142,26 @@ function Form({ pasien }: { pasien: PasienRow }) {
           <label htmlFor="jenis_kelamin" className="mb-1.5 block text-sm font-medium">
             Jenis kelamin
           </label>
-          <select
-            id="jenis_kelamin"
-            className="input"
-            aria-invalid={errors.jenis_kelamin !== undefined}
-            {...register('jenis_kelamin')}
-          >
-            <option value="L">Laki-laki</option>
-            <option value="P">Perempuan</option>
-          </select>
+          <Controller
+            control={control}
+            name="jenis_kelamin"
+            render={({ field }) => (
+              <>
+                <SearchableSelect
+                  id="jenis_kelamin"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: 'Laki-laki', value: 'L' },
+                    { label: 'Perempuan', value: 'P' },
+                  ]}
+                  placeholder="Pilih"
+                  ariaLabel="Jenis kelamin"
+                  invalid={errors.jenis_kelamin !== undefined}
+                />
+              </>
+            )}
+          />
         </div>
       </div>
 

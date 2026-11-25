@@ -1,13 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { errorMessage } from '../../api/client'
 import { getKaryawan, listJabatans, listSpesialis, updateKaryawan } from '../../api/karyawan'
 import type { KaryawanRow } from '../../api/karyawan'
 import { FormMaster } from '../../components/FormMaster'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
@@ -77,6 +78,7 @@ function Form({ karyawan }: { karyawan: KaryawanRow }) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<KaryawanValues>({
     resolver: zodResolver(schema),
@@ -130,15 +132,24 @@ function Form({ karyawan }: { karyawan: KaryawanRow }) {
           <label htmlFor="jenis_kelamin" className="mb-1.5 block text-sm font-medium">
             Jenis kelamin
           </label>
-          <select
-            id="jenis_kelamin"
-            className="input"
-            aria-invalid={errors.jenis_kelamin !== undefined}
-            {...register('jenis_kelamin')}
-          >
-            <option value="L">Laki-laki</option>
-            <option value="P">Perempuan</option>
-          </select>
+          <Controller
+            control={control}
+            name="jenis_kelamin"
+            render={({ field }) => (
+              <SearchableSelect
+                id="jenis_kelamin"
+                value={field.value}
+                onChange={field.onChange}
+                options={[
+                  { label: 'Laki-laki', value: 'L' },
+                  { label: 'Perempuan', value: 'P' },
+                ]}
+                placeholder="Pilih"
+                ariaLabel="Jenis kelamin"
+                invalid={errors.jenis_kelamin !== undefined}
+              />
+            )}
+          />
         </div>
         <div>
           <label htmlFor="tanggal_lahir" className="mb-1.5 block text-sm font-medium">
@@ -152,22 +163,35 @@ function Form({ karyawan }: { karyawan: KaryawanRow }) {
         <label htmlFor="jabatan_id" className="mb-1.5 block text-sm font-medium">
           Jabatan
         </label>
-        <select
-          id="jabatan_id"
-          className="input"
-          aria-invalid={errors.jabatan_id !== undefined}
-          {...register('jabatan_id', { onChange: (e) => setJabatanDipilih(e.target.value) })}
-        >
-          <option value="">Pilih jabatan</option>
-          {(jabatans.data ?? []).map((jabatan) => (
-            <option key={jabatan.id} value={jabatan.id}>
-              {jabatan.name}
-            </option>
-          ))}
-        </select>
-        {errors.jabatan_id && (
-          <p className="mt-1 text-xs text-red-600">{errors.jabatan_id.message}</p>
-        )}
+        <Controller
+          control={control}
+          name="jabatan_id"
+          render={({ field }) => (
+            <>
+              <SearchableSelect
+                id="jabatan_id"
+                value={field.value}
+                onChange={(val) => {
+                  field.onChange(val)
+                  setJabatanDipilih(val)
+                }}
+                options={[
+                  { label: 'Pilih jabatan', value: '' },
+                  ...(jabatans.data ?? []).map((jabatan) => ({
+                    label: jabatan.name,
+                    value: jabatan.id,
+                  })),
+                ]}
+                placeholder="Pilih jabatan"
+                ariaLabel="Jabatan"
+                invalid={errors.jabatan_id !== undefined}
+              />
+              {errors.jabatan_id && (
+                <p className="mt-1 text-xs text-red-600">{errors.jabatan_id.message}</p>
+              )}
+            </>
+          )}
+        />
       </div>
 
       {dokter && (
@@ -175,18 +199,26 @@ function Form({ karyawan }: { karyawan: KaryawanRow }) {
           <label htmlFor="spesialis_id" className="mb-1.5 block text-sm font-medium">
             Spesialis
           </label>
-          <select
-            id="spesialis_id"
-            className="input"
-            {...register('spesialis_id')}
-          >
-            <option value="">Pilih spesialis</option>
-            {(spesialis.data ?? []).map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
+          <Controller
+            control={control}
+            name="spesialis_id"
+            render={({ field }) => (
+              <SearchableSelect
+                id="spesialis_id"
+                value={field.value}
+                onChange={field.onChange}
+                options={[
+                  { label: 'Pilih spesialis', value: '' },
+                  ...(spesialis.data ?? []).map((item) => ({
+                    label: item.name,
+                    value: item.id,
+                  })),
+                ]}
+                placeholder="Pilih spesialis"
+                ariaLabel="Spesialis"
+              />
+            )}
+          />
         </div>
       )}
 

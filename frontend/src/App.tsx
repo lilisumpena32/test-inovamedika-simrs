@@ -24,6 +24,10 @@ import { PemeriksaanPage } from './pages/pemeriksaan/PemeriksaanPage'
 import { IndexPage as ResepIndexPage } from './pages/resep/IndexPage'
 import { ResepPage } from './pages/resep/ResepPage'
 import { IndexPage as LabIndexPage } from './pages/laboratorium/IndexPage'
+import { IndexPage as KasirIndexPage } from './pages/kasir/IndexPage'
+import { TagihanPage } from './pages/kasir/TagihanPage'
+import { CetakPage } from './pages/kasir/CetakPage'
+import { IndexPage as LaporanIndexPage } from './pages/laporan/IndexPage'
 import { LoginPage } from './pages/login/LoginPage'
 import { IndexPage as KaryawanIndexPage } from './pages/karyawan/IndexPage'
 import { CreatePage as KaryawanCreatePage } from './pages/karyawan/CreatePage'
@@ -270,6 +274,38 @@ export default function App() {
                     element={
                       <MenuGuard kode="laboratorium.order">
                         <LabIndexPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="kasir"
+                    element={
+                      <MenuGuard kode="kasir.tagihan">
+                        <KasirIndexPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="kasir/:id"
+                    element={
+                      <MenuGuard kode="kasir.tagihan">
+                        <TagihanPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="kasir/:id/cetak"
+                    element={
+                      <MenuGuard kode="kasir.tagihan">
+                        <CetakPage />
+                      </MenuGuard>
+                    }
+                  />
+                  <Route
+                    path="laporan"
+                    element={
+                      <MenuGuard kode="laporan.operasional">
+                        <LaporanIndexPage />
                       </MenuGuard>
                     }
                   />

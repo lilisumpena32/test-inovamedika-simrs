@@ -1,0 +1,58 @@
+# Bukti gangguan integrasi lab (skenario D5)
+
+Tanggal: 24 November 2026. Semua langkah dijalankan pada stack compose (`db`, `php`, `nginx`, `node-api`, `lab-mock`).
+
+Skenario: lab pihak ketiga tidak tersedia saat order lab dibuat. Order tetap tersimpan, worker mencatat kegagalan tanpa menghilangkan data; setelah layanan pulih, data diproses sampai hasilnya diterapkan ke order lab.
+
+## 1. Order lab dibuat saat mock lab dimatikan
+
+```
+docker compose stop lab-mock
+```
+
+`POST /api/v1/kunjungan/019b8505-.../lab` (dokter, jenis "Fungsi hati") →
+
+```json
+{"status":true,"code":201,"message":"Order lab ditambahkan.","data":{"id":"bd465f98-f091-46fb-9387-84c7983256cc","kunjungan_id":"019b8505-f110-4ea5-9c91-be6f9284f550","jenis_lab":{"kode":"LB-0004","nama":"Fungsi hati"},"status":"diminta"}}
+```
+
+## 2. Worker gagal mengirim, data tetap ada
+
+Setelah beberapa siklus polling:
+
+```
+ outbox_status | attempts |  last_error  | order_status | hasil
+---------------+----------+--------------+--------------+-------
+ pending       |        4 | fetch failed | diminta      |
+```
+
+Percobaan kelima membuat status outbox `failed` — order lab tetap `diminta`, tidak ada data yang hilang:
+
+```
+ outbox_status | attempts |  last_error  | order_status | hasil
+---------------+----------+--------------+--------------+-------
+ failed        |        5 | fetch failed | diminta      |
+```
+
+## 3. Layanan pulih, outbox diantrekan ulang
+
+```
+docker compose start lab-mock
+UPDATE outbox_lab SET status = 'pending', attempts = 0, last_error = null
+  WHERE order_lab_id = 'bd465f98-f091-46fb-9387-84c7983256cc';
+```
+
+Worker mengambil ulang baris tersebut, mengirim ke mock lab, menulis hasil, lalu memanggil `POST /api/v1/lab/pull-hasil`:
+
+```
+ outbox_status | attempts | last_error | order_status |                          hasil
+---------------+----------+------------+--------------+---------------------------------------------------------
+ applied       |        1 |            | selesai      | Fungsi hati — Candra Wijaya (KJ-20261124-11224): nilai dalam batas normal kecuali leukosit 12.500/µL (batas atas 11.000/µL).
+```
+
+## Kesimpulan
+
+- Kegagalan integrasi tidak membatalkan transaksi klinik dan tidak menghilangkan order.
+- Status outbox bergerak `pending → failed → pending → sent → applied`; order lab baru `selesai` setelah hasil diterima.
+- Requeue cukup mengembalikan status ke `pending` (dan mereset `attempts`), tidak perlu membuat order baru — tidak ada duplikasi hasil.
+- Data uji dihapus setelah bukti diambil; order demo lain tidak tersentuh.

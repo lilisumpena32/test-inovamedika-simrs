@@ -6,16 +6,27 @@ namespace app\modules\api\controllers;
 
 use app\models\Kunjungan;
 use app\models\OrderLab;
+use app\models\OutboxLab;
 use Yii;
 use yii\web\NotFoundHttpException;
 
 class LabController extends ApiController
 {
+    public function behaviors(): array
+    {
+        $behaviors = parent::behaviors();
+
+        $behaviors['jwtAuth']['except'] = ['pull-hasil'];
+
+        return $behaviors;
+    }
+
     protected function verbs(): array
     {
         return [
             'index' => ['GET'],
             'hasil' => ['PUT'],
+            'pull-hasil' => ['POST'],
         ];
     }
 
@@ -68,6 +79,42 @@ class LabController extends ApiController
         $order->save(false);
 
         return $this->sukses($this->ringkas($order), 200, 'Hasil lab disimpan.');
+    }
+
+    public function actionPullHasil(): array
+    {
+        $apiKey = (string) (Yii::$app->params['labApiKey'] ?? '');
+
+        if ($apiKey === '' || !hash_equals($apiKey, (string) Yii::$app->request->headers->get('X-Api-Key', ''))) {
+            return $this->gagal('API key tidak valid', 401);
+        }
+
+        $baris = OutboxLab::find()->where(['status' => OutboxLab::STATUS_SENT])->with('orderLab')->all();
+        $diterapkan = 0;
+
+        foreach ($baris as $outbox) {
+            /** @var OutboxLab $outbox */
+            $order = $outbox->orderLab;
+
+            if ($order === null || $order->status !== OrderLab::STATUS_DIMINTA) {
+                $outbox->status = OutboxLab::STATUS_APPLIED;
+                $outbox->save(false);
+
+                continue;
+            }
+
+            $order->hasil = $outbox->hasil;
+            $order->status = OrderLab::STATUS_SELESAI;
+            $order->waktu_hasil = date('Y-m-d H:i:s');
+            $order->save(false);
+
+            $outbox->status = OutboxLab::STATUS_APPLIED;
+            $outbox->save(false);
+
+            $diterapkan++;
+        }
+
+        return $this->sukses(['diterapkan' => $diterapkan]);
     }
 
     private function cari(string $id): OrderLab

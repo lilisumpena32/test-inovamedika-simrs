@@ -20,6 +20,7 @@ import { listJenisLabAktif } from '../../api/jenislab'
 import { listObats } from '../../api/obat'
 import { buatResep, getResepKunjungan, ubahResep, type ResepItemInput } from '../../api/resep'
 import { useSession } from '../../auth/session'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 function formatRupiah(nilai: number): string {
@@ -110,7 +111,7 @@ export function PemeriksaanPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Pemeriksaan {data.kode_antrean}</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">Pemeriksaan {data.kode_antrean}</h1>
         <Link to="/pemeriksaan" className="text-sm font-medium text-teal-700 underline">
           Kembali
         </Link>
@@ -391,19 +392,21 @@ function BagianTindakan({
 
       {aktif && (
         <div className="flex gap-2">
-          <select
-            value={tindakanId}
-            onChange={(e) => setTindakanId(e.target.value)}
-            className="input max-w-sm"
-            aria-label="Pilih tindakan"
-          >
-            <option value="">Pilih tindakan</option>
-            {(tindakans.data ?? []).map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.nama} — {formatRupiah(t.tarif)}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-0 flex-1 sm:max-w-sm">
+            <SearchableSelect
+              value={tindakanId}
+              onChange={setTindakanId}
+              options={[
+                { label: 'Pilih tindakan', value: '' },
+                ...(tindakans.data ?? []).map((t) => ({
+                  label: `${t.nama} — ${formatRupiah(t.tarif)}`,
+                  value: t.id,
+                })),
+              ]}
+              placeholder="Pilih tindakan"
+              ariaLabel="Pilih tindakan"
+            />
+          </div>
           <button
             type="button"
             onClick={() => tindakanId !== '' && tambah.mutate()}
@@ -418,7 +421,8 @@ function BagianTindakan({
       {list.length === 0 && <p className="text-sm text-slate-500">Belum ada tindakan.</p>}
 
       {list.length > 0 && (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[32rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="py-2 font-medium">Tindakan</th>
@@ -448,6 +452,7 @@ function BagianTindakan({
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   )
@@ -495,19 +500,21 @@ function BagianLab({
 
       {aktif && (
         <div className="flex gap-2">
-          <select
-            value={jenisLabId}
-            onChange={(e) => setJenisLabId(e.target.value)}
-            className="input max-w-sm"
-            aria-label="Pilih jenis lab"
-          >
-            <option value="">Pilih jenis lab</option>
-            {(jenisLabs.data ?? []).map((j) => (
-              <option key={j.id} value={j.id}>
-                {j.nama} — {formatRupiah(j.tarif)}
-              </option>
-            ))}
-          </select>
+          <div className="min-w-0 flex-1 sm:max-w-sm">
+            <SearchableSelect
+              value={jenisLabId}
+              onChange={setJenisLabId}
+              options={[
+                { label: 'Pilih jenis lab', value: '' },
+                ...(jenisLabs.data ?? []).map((j) => ({
+                  label: `${j.nama} — ${formatRupiah(j.tarif)}`,
+                  value: j.id,
+                })),
+              ]}
+              placeholder="Pilih jenis lab"
+              ariaLabel="Pilih jenis lab"
+            />
+          </div>
           <button
             type="button"
             onClick={() => jenisLabId !== '' && tambah.mutate()}
@@ -522,7 +529,8 @@ function BagianLab({
       {list.length === 0 && <p className="text-sm text-slate-500">Belum ada permintaan lab.</p>}
 
       {list.length > 0 && (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[32rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="py-2 font-medium">Jenis</th>
@@ -542,6 +550,7 @@ function BagianLab({
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   )
@@ -597,24 +606,24 @@ function BagianResep({ kunjunganId, aktif }: { kunjunganId: string; aktif: boole
                   <label htmlFor={`resep-${index}-obat`} className="sr-only">
                     Obat
                   </label>
-                  <select
+                  <SearchableSelect
                     id={`resep-${index}-obat`}
                     value={item.obat_id}
-                    onChange={(e) => {
-                      const nilai = e.target.value
+                    onChange={(nilai) => {
                       setItems((sebelum) =>
                         sebelum.map((i, pos) => (pos === index ? { ...i, obat_id: nilai } : i)),
                       )
                     }}
-                    className="input"
-                  >
-                    <option value="">Pilih obat</option>
-                    {(obats.data ?? []).map((obat) => (
-                      <option key={obat.id} value={obat.id}>
-                        {obat.nama_obat} ({obat.satuan?.name ?? '-'}, stok {obat.stok})
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { label: 'Pilih obat', value: '' },
+                      ...(obats.data ?? []).map((obat) => ({
+                        label: `${obat.nama_obat} (${obat.satuan?.name ?? '-'}, stok ${obat.stok})`,
+                        value: obat.id,
+                      })),
+                    ]}
+                    placeholder="Pilih obat"
+                    ariaLabel="Obat"
+                  />
                 </div>
                 <div>
                   <label htmlFor={`resep-${index}-dosis`} className="sr-only">
@@ -708,7 +717,8 @@ function BagianResep({ kunjunganId, aktif }: { kunjunganId: string; aktif: boole
       )}
 
       {list.length > 0 && (
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[32rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="py-2 font-medium">Obat</th>
@@ -728,6 +738,7 @@ function BagianResep({ kunjunganId, aktif }: { kunjunganId: string; aktif: boole
             ))}
           </tbody>
         </table>
+        </div>
       )}
 
       {sudahSerah && <p className="text-sm text-emerald-700">Obat sudah diserahkan farmasi.</p>}

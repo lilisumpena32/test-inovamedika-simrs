@@ -24,14 +24,14 @@ export function CariPasienModal({
   const daftarPasien = pasiens.data?.items ?? []
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
       <div className="absolute inset-0 bg-slate-950/60" aria-hidden="true" />
 
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="judul-cari-pasien"
-        className="relative max-h-[85vh] w-full max-w-2xl space-y-4 overflow-y-auto rounded-lg bg-white p-5 shadow-xl"
+        className="relative max-h-[90dvh] w-full max-w-2xl space-y-4 overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl sm:rounded-lg sm:p-5"
       >
         <h2 id="judul-cari-pasien" className="text-lg font-semibold">
           Cari Pasien
@@ -56,8 +56,8 @@ export function CariPasienModal({
         )}
 
         {cari.trim() !== '' && (
-          <div className="max-h-80 overflow-y-auto rounded-md border border-slate-200">
-            <table className="w-full text-sm">
+          <div className="max-h-80 overflow-auto rounded-md border border-slate-200">
+            <table className="w-full min-w-[34rem] text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
                   <th className="px-3 py-2 font-medium">No. RM</th>

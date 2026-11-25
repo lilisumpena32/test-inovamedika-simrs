@@ -64,7 +64,7 @@ export function DaftarModal({ poli, onTutup }: { poli: PoliRow; onTutup: () => v
         role="dialog"
         aria-modal="true"
         aria-labelledby="judul-daftar"
-        className="relative max-h-[90vh] w-full max-w-md space-y-4 overflow-y-auto rounded-lg bg-white p-5 shadow-xl"
+        className="relative max-h-[90dvh] w-full max-w-md space-y-4 overflow-y-auto rounded-t-xl bg-white p-4 shadow-xl sm:rounded-lg sm:p-5"
       >
         <h2 id="judul-daftar" className="text-lg font-semibold">
           Daftar Pasien

@@ -1,12 +1,13 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { errorMessage } from '../../api/client'
 import { getKaryawan, setKaryawanAkun } from '../../api/karyawan'
 import type { KaryawanRow } from '../../api/karyawan'
 import { listUsers } from '../../api/user'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
@@ -73,8 +74,8 @@ function Form({ karyawan }: { karyawan: KaryawanRow }) {
   })
 
   const {
-    register,
     handleSubmit,
+    control,
   } = useForm<AkunValues>({
     resolver: zodResolver(schema),
     defaultValues: { user_id: karyawan.user?.id ?? '' },
@@ -82,7 +83,7 @@ function Form({ karyawan }: { karyawan: KaryawanRow }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Akun Karyawan</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Akun Karyawan</h1>
 
       <section className="card p-5">
         <p className="text-sm font-semibold">{karyawan.nama_karyawan}</p>
@@ -97,17 +98,29 @@ function Form({ karyawan }: { karyawan: KaryawanRow }) {
             <label htmlFor="user_id" className="mb-1.5 block text-sm font-medium">
               Akun login
             </label>
-            <select id="user_id" className="input" {...register('user_id')}>
-              <option value="">(tanpa akun)</option>
-              {karyawan.user && (
-                <option value={karyawan.user.id}>{karyawan.user.username} (terhubung)</option>
+            <Controller
+              control={control}
+              name="user_id"
+              render={({ field }) => (
+                <SearchableSelect
+                  id="user_id"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: '(tanpa akun)', value: '' },
+                    ...(karyawan.user
+                      ? [{ label: `${karyawan.user.username} (terhubung)`, value: karyawan.user.id }]
+                      : []),
+                    ...(akun.data ?? []).map((user) => ({
+                      label: user.username,
+                      value: user.id,
+                    })),
+                  ]}
+                  placeholder="(tanpa akun)"
+                  ariaLabel="Akun login"
+                />
               )}
-              {(akun.data ?? []).map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.username}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="flex gap-2 pt-2">

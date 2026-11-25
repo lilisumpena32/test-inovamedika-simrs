@@ -212,6 +212,95 @@ class SeedController extends Controller
         ['Fitri Handayani', 'P', '1986-12-05', '3201012345670006', '081200000006', 'Jl. Cemara No. 21'],
     ];
 
+    public function actionPerforma(): int
+    {
+        if (JadwalPraktek::find()->exists() === false) {
+            $this->stderr("Jadwal belum ada. Jalankan `yii seed/master` lebih dulu.\n");
+
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        $transaksi = Yii::$app->db->beginTransaction();
+
+        try {
+            $this->isiPasienPerforma();
+            $this->isiKunjunganPerforma();
+
+            $transaksi->commit();
+        } catch (\Throwable $e) {
+            $transaksi->rollBack();
+            $this->stderr("Gagal: {$e->getMessage()}\n");
+
+            return ExitCode::UNSPECIFIED_ERROR;
+        }
+
+        $total = (int) Yii::$app->db->createCommand('SELECT COUNT(*) FROM kunjungan')->queryScalar();
+        $this->stdout("Data performa selesai. Total kunjungan: {$total}\n");
+
+        return ExitCode::OK;
+    }
+
+    private function isiPasienPerforma(): void
+    {
+        foreach (range(1, 100) as $i) {
+            $nama = 'Performa ' . str_pad((string) $i, 3, '0', STR_PAD_LEFT);
+
+            if (Pasien::find()->where(['nama' => $nama])->exists()) {
+                continue;
+            }
+
+            $noRm = 'RM' . str_pad(
+                (string) Yii::$app->db->createCommand("SELECT nextval('seq_no_rm')")->queryScalar(),
+                9,
+                '0',
+                STR_PAD_LEFT,
+            );
+
+            $pasien = new Pasien([
+                'no_rm' => $noRm,
+                'nama' => $nama,
+                'jenis_kelamin' => $i % 2 === 0 ? 'P' : 'L',
+            ]);
+
+            if (!$pasien->save(false)) {
+                throw new \RuntimeException("gagal menyimpan pasien performa {$nama}");
+            }
+        }
+    }
+
+    private function isiKunjunganPerforma(): void
+    {
+        // ±250 hari kerja terakhir × 100 pasien × jadwal dokter aktif ≈ 50 rb
+        // kunjungan selesai. Satu statement SQL (generate_series) sesuai rencana;
+        // idempoten lewat kombinasi pasien + jadwal + tanggal (sama dengan
+        // constraint unik parsial di tabel).
+        Yii::$app->db->createCommand(<<<'SQL'
+            INSERT INTO kunjungan (pasien_id, dokter_id, poli_id, jadwal_id, tgl_kunjungan,
+                                   no_kunjungan, no_antrean, status, biaya_daftar, idempotency_key)
+            SELECT p.id, j.karyawan_id, j.poli_id, j.id, d.tgl,
+                   'PF-' || to_char(d.tgl, 'YYYYMMDD') || '-' || lpad((row_number() over (partition by d.tgl))::text, 4, '0'),
+                   d.no_antrean, 'selesai', po.biaya_daftar,
+                   'perf-' || md5(p.id::text || j.id::text || d.tgl::text)
+            FROM generate_series(1, 100) g
+            JOIN pasien p ON p.nama = 'Performa ' || lpad(g::text, 3, '0')
+            CROSS JOIN LATERAL (
+                SELECT t::date AS tgl, EXTRACT(ISODOW FROM t)::int AS hari,
+                       (row_number() over ())::int AS no_antrean
+                FROM generate_series(CURRENT_DATE - INTERVAL '350 days',
+                                     CURRENT_DATE - 1,
+                                     '1 day') t
+                WHERE EXTRACT(ISODOW FROM t) IN (1, 2, 3, 4, 5)
+            ) d
+            JOIN jadwal_praktek j ON j.hari = d.hari AND j.is_active
+            JOIN poli po ON po.id = j.poli_id
+            WHERE NOT EXISTS (
+                SELECT 1 FROM kunjungan k
+                WHERE k.pasien_id = p.id AND k.jadwal_id = j.id AND k.tgl_kunjungan = d.tgl
+            )
+        SQL
+        )->execute();
+    }
+
     public function actionMaster(): int
     {
         if (Role::findOne(['role_code' => 'admin']) === null

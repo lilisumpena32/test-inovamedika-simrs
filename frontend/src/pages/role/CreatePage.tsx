@@ -42,7 +42,7 @@ export function CreatePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Tambah Role</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Tambah Role</h1>
 
       <form
         className="card max-w-xl space-y-4 p-5"

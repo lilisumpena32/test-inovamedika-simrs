@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { errorMessage } from '../../api/client'
 import { createObat, listKategoris, listGolonganObats, listSatuans } from '../../api/obat'
 import { FormMaster } from '../../components/FormMaster'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
@@ -42,6 +43,7 @@ export function CreatePage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<ObatValues>({
     resolver: zodResolver(schema),
@@ -80,64 +82,94 @@ export function CreatePage() {
           <label htmlFor="kategori_id" className="mb-1.5 block text-sm font-medium">
             Kategori
           </label>
-          <select
-            id="kategori_id"
-            className="input"
-            aria-invalid={errors.kategori_id !== undefined}
-            {...register('kategori_id')}
-          >
-            <option value="">Pilih</option>
-            {(kategoris.data ?? []).map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          {errors.kategori_id && (
-            <p className="mt-1 text-xs text-red-600">{errors.kategori_id.message}</p>
-          )}
+          <Controller
+            control={control}
+            name="kategori_id"
+            render={({ field }) => (
+              <>
+                <SearchableSelect
+                  id="kategori_id"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: 'Pilih', value: '' },
+                    ...(kategoris.data ?? []).map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    })),
+                  ]}
+                  placeholder="Pilih"
+                  ariaLabel="Kategori"
+                  invalid={errors.kategori_id !== undefined}
+                />
+                {errors.kategori_id && (
+                  <p className="mt-1 text-xs text-red-600">{errors.kategori_id.message}</p>
+                )}
+              </>
+            )}
+          />
         </div>
         <div>
           <label htmlFor="golongan_obat_id" className="mb-1.5 block text-sm font-medium">
             Golongan
           </label>
-          <select
-            id="golongan_obat_id"
-            className="input"
-            aria-invalid={errors.golongan_obat_id !== undefined}
-            {...register('golongan_obat_id')}
-          >
-            <option value="">Pilih</option>
-            {(golongans.data ?? []).map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          {errors.golongan_obat_id && (
-            <p className="mt-1 text-xs text-red-600">{errors.golongan_obat_id.message}</p>
-          )}
+          <Controller
+            control={control}
+            name="golongan_obat_id"
+            render={({ field }) => (
+              <>
+                <SearchableSelect
+                  id="golongan_obat_id"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: 'Pilih', value: '' },
+                    ...(golongans.data ?? []).map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    })),
+                  ]}
+                  placeholder="Pilih"
+                  ariaLabel="Golongan"
+                  invalid={errors.golongan_obat_id !== undefined}
+                />
+                {errors.golongan_obat_id && (
+                  <p className="mt-1 text-xs text-red-600">{errors.golongan_obat_id.message}</p>
+                )}
+              </>
+            )}
+          />
         </div>
         <div>
           <label htmlFor="satuan_id" className="mb-1.5 block text-sm font-medium">
             Satuan
           </label>
-          <select
-            id="satuan_id"
-            className="input"
-            aria-invalid={errors.satuan_id !== undefined}
-            {...register('satuan_id')}
-          >
-            <option value="">Pilih</option>
-            {(satuans.data ?? []).map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </select>
-          {errors.satuan_id && (
-            <p className="mt-1 text-xs text-red-600">{errors.satuan_id.message}</p>
-          )}
+          <Controller
+            control={control}
+            name="satuan_id"
+            render={({ field }) => (
+              <>
+                <SearchableSelect
+                  id="satuan_id"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: 'Pilih', value: '' },
+                    ...(satuans.data ?? []).map((item) => ({
+                      label: item.name,
+                      value: item.id,
+                    })),
+                  ]}
+                  placeholder="Pilih"
+                  ariaLabel="Satuan"
+                  invalid={errors.satuan_id !== undefined}
+                />
+                {errors.satuan_id && (
+                  <p className="mt-1 text-xs text-red-600">{errors.satuan_id.message}</p>
+                )}
+              </>
+            )}
+          />
         </div>
       </div>
 

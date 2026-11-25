@@ -1,9 +1,11 @@
-﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { errorMessage } from '../../api/client'
 import { listObats, setObatStatus } from '../../api/obat'
 import { AksiMenu } from '../../components/AksiMenu'
+import { Pagination } from '../../components/Pagination'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { Can } from '../../auth/MenuGuard'
 import { useSession } from '../../auth/session'
 import { useDebounced } from '../../hooks/useDebounced'
@@ -40,7 +42,7 @@ export function IndexPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">List Obat</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">List Obat</h1>
         <Can kode="farmasi.obat" action="can_create">
           <button
             type="button"
@@ -53,7 +55,7 @@ export function IndexPage() {
       </header>
 
       <section className="card">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 [&>*]:w-full sm:[&>*]:w-56">
           <input
             type="search"
             value={q}
@@ -65,19 +67,20 @@ export function IndexPage() {
             className="input max-w-xs"
             aria-label="Cari obat"
           />
-          <select
+          <SearchableSelect
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value)
+            onChange={(val) => {
+              setStatus(val)
               setPage(1)
             }}
-            className="select"
-            aria-label="Filter status"
-          >
-            <option value="">Semua status</option>
-            <option value="true">Aktif</option>
-            <option value="false">Nonaktif</option>
-          </select>
+            options={[
+              { label: 'Semua status', value: '' },
+              { label: 'Aktif', value: 'true' },
+              { label: 'Nonaktif', value: 'false' },
+            ]}
+            placeholder="Semua status"
+            ariaLabel="Filter status"
+          />
         </div>
 
         {obats.isError && (
@@ -96,7 +99,8 @@ export function IndexPage() {
           </div>
         )}
 
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Kode</th>
@@ -171,28 +175,14 @@ export function IndexPage() {
             ))}
           </tbody>
         </table>
-
-        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm text-slate-500">
-          <p>{list ? `Halaman ${list.page} dari ${totalHalaman}` : ''}</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((h) => h - 1)}
-              className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
-            >
-              Sebelumnya
-            </button>
-            <button
-              type="button"
-              disabled={list ? page >= totalHalaman : true}
-              onClick={() => setPage((h) => h + 1)}
-              className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
-            >
-              Berikutnya
-            </button>
-          </div>
         </div>
+
+        <Pagination
+          halaman={page}
+          totalHalaman={totalHalaman}
+          onSebelumnya={() => setPage((h) => h - 1)}
+          onBerikutnya={() => setPage((h) => h + 1)}
+        />
       </section>
     </div>
   )

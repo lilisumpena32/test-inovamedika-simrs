@@ -5,6 +5,8 @@ import { errorMessage } from '../../api/client'
 import { listKunjungans, STATUS_LABEL } from '../../api/kunjungan'
 import { listPolis } from '../../api/poli'
 import { AksiMenu } from '../../components/AksiMenu'
+import { Pagination } from '../../components/Pagination'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useSession } from '../../auth/session'
 import { tanggalHariIni } from '../../lib/tanggal'
 
@@ -46,7 +48,7 @@ export function ListPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">List Kunjungan</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">List Kunjungan</h1>
         <Link
           to="/pendaftaran"
           className="rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
@@ -56,7 +58,7 @@ export function ListPage() {
       </header>
 
       <section className="card">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 [&>*]:w-full sm:[&>*]:w-56">
           <input
             type="date"
             value={tanggal}
@@ -67,38 +69,38 @@ export function ListPage() {
             className="input max-w-[10rem]"
             aria-label="Tanggal kunjungan"
           />
-          <select
+          <SearchableSelect
             value={poliId}
-            onChange={(e) => {
-              setPoliId(e.target.value)
+            onChange={(val) => {
+              setPoliId(val)
               setPage(1)
             }}
-            className="select"
-            aria-label="Filter poli"
-          >
-            <option value="">Semua poli</option>
-            {(polis.data ?? []).map((poli) => (
-              <option key={poli.id} value={poli.id}>
-                {poli.nama}
-              </option>
-            ))}
-          </select>
-          <select
+            options={[
+              { label: 'Semua poli', value: '' },
+              ...(polis.data ?? []).map((poli) => ({
+                label: poli.nama,
+                value: poli.id,
+              })),
+            ]}
+            placeholder="Semua poli"
+            ariaLabel="Filter poli"
+          />
+          <SearchableSelect
             value={status}
-            onChange={(e) => {
-              setStatus(e.target.value)
+            onChange={(val) => {
+              setStatus(val)
               setPage(1)
             }}
-            className="select"
-            aria-label="Filter status"
-          >
-            <option value="">Semua status</option>
-            {Object.entries(STATUS_LABEL).map(([nilai, label]) => (
-              <option key={nilai} value={nilai}>
-                {label}
-              </option>
-            ))}
-          </select>
+            options={[
+              { label: 'Semua status', value: '' },
+              ...Object.entries(STATUS_LABEL).map(([nilai, label]) => ({
+                label,
+                value: nilai,
+              })),
+            ]}
+            placeholder="Semua status"
+            ariaLabel="Filter status"
+          />
         </div>
 
         {kunjungans.isError && (
@@ -117,7 +119,8 @@ export function ListPage() {
           </div>
         )}
 
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[60rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">No. Kunjungan</th>
@@ -190,28 +193,14 @@ export function ListPage() {
             ))}
           </tbody>
         </table>
-
-        <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3 text-sm text-slate-500">
-          <p>{list ? `Halaman ${list.page} dari ${totalHalaman}` : ''}</p>
-          <div className="flex gap-2">
-            <button
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setPage((h) => h - 1)}
-              className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
-            >
-              Sebelumnya
-            </button>
-            <button
-              type="button"
-              disabled={list ? page >= totalHalaman : true}
-              onClick={() => setPage((h) => h + 1)}
-              className="rounded border border-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40"
-            >
-              Berikutnya
-            </button>
-          </div>
         </div>
+
+        <Pagination
+          halaman={page}
+          totalHalaman={totalHalaman}
+          onSebelumnya={() => setPage((h) => h - 1)}
+          onBerikutnya={() => setPage((h) => h + 1)}
+        />
       </section>
     </div>
   )

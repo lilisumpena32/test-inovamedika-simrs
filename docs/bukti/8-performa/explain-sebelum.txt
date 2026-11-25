@@ -1,0 +1,59 @@
+﻿                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=9.43..9.45 rows=1 width=13) (actual time=53.735..56.474 rows=5 loops=1)
+   Group Key: po.nama
+   Buffers: shared hit=54786
+   ->  Sort  (cost=9.43..9.44 rows=1 width=5) (actual time=52.534..53.899 rows=47800 loops=1)
+         Sort Key: po.nama
+         Sort Method: quicksort  Memory: 2343kB
+         Buffers: shared hit=54786
+         ->  Nested Loop  (cost=0.29..9.42 rows=1 width=5) (actual time=0.031..47.156 rows=47800 loops=1)
+               Join Filter: ((po.id)::text = (k.poli_id)::text)
+               Rows Removed by Join Filter: 75500
+               Buffers: shared hit=54783
+               ->  Index Scan using ix_kunjungan_tanggal on kunjungan k  (cost=0.29..8.31 rows=1 width=37) (actual time=0.025..10.244 rows=47800 loops=1)
+                     Index Cond: ((tgl_kunjungan >= '2026-06-01'::date) AND (tgl_kunjungan <= '2026-11-23'::date))
+                     Filter: ((status)::text <> 'batal'::text)
+                     Buffers: shared hit=6983
+               ->  Seq Scan on poli po  (cost=0.00..1.05 rows=5 width=42) (actual time=0.000..0.000 rows=3 loops=47800)
+                     Buffers: shared hit=47800
+ Planning:
+   Buffers: shared hit=287
+ Planning Time: 1.294 ms
+ Execution Time: 56.647 ms
+(21 rows)
+
+                                                                                QUERY PLAN                                                                                 
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ GroupAggregate  (cost=11.93..11.95 rows=1 width=25) (actual time=18.400..18.486 rows=0 loops=1)
+   Group Key: o.nama_obat
+   Buffers: shared hit=6983 read=1 dirtied=1
+   ->  Sort  (cost=11.93..11.94 rows=1 width=21) (actual time=18.398..18.484 rows=0 loops=1)
+         Sort Key: o.nama_obat
+         Sort Method: quicksort  Memory: 25kB
+         Buffers: shared hit=6983 read=1 dirtied=1
+         ->  Nested Loop  (cost=8.32..11.92 rows=1 width=21) (actual time=18.382..18.467 rows=0 loops=1)
+               Join Filter: ((o.id)::text = (ro.obat_id)::text)
+               Buffers: shared hit=6983 read=1 dirtied=1
+               ->  Nested Loop  (cost=8.32..10.70 rows=1 width=122) (actual time=18.381..18.465 rows=0 loops=1)
+                     Join Filter: ((r.id)::text = (ro.resep_id)::text)
+                     Buffers: shared hit=6983 read=1 dirtied=1
+                     ->  Hash Join  (cost=8.32..9.50 rows=1 width=118) (actual time=18.328..18.411 rows=0 loops=1)
+                           Hash Cond: ((r.kunjungan_id)::text = (k.id)::text)
+                           Buffers: shared hit=6983 read=1 dirtied=1
+                           ->  Seq Scan on resep r  (cost=0.00..1.14 rows=14 width=236) (actual time=0.243..0.246 rows=1 loops=1)
+                                 Buffers: shared read=1 dirtied=1
+                           ->  Hash  (cost=8.31..8.31 rows=1 width=37) (actual time=18.062..18.063 rows=47800 loops=1)
+                                 Buckets: 65536 (originally 1024)  Batches: 1 (originally 1)  Memory Usage: 3733kB
+                                 Buffers: shared hit=6983
+                                 ->  Index Scan using ix_kunjungan_tanggal on kunjungan k  (cost=0.29..8.31 rows=1 width=37) (actual time=0.024..8.262 rows=47800 loops=1)
+                                       Index Cond: ((tgl_kunjungan >= '2026-06-01'::date) AND (tgl_kunjungan <= '2026-11-23'::date))
+                                       Buffers: shared hit=6983
+                     ->  Seq Scan on resep_obat ro  (cost=0.00..1.09 rows=9 width=240) (never executed)
+               ->  Seq Scan on obat o  (cost=0.00..1.10 rows=10 width=54) (never executed)
+ Planning:
+   Buffers: shared hit=120 read=8
+ Planning Time: 4.565 ms
+ Execution Time: 18.969 ms
+(30 rows)
+

@@ -1,11 +1,12 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import { z } from 'zod'
 import { errorMessage } from '../../api/client'
 import { createPasien } from '../../api/pasien'
 import { FormMaster } from '../../components/FormMaster'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
@@ -45,6 +46,7 @@ export function CreatePage() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<PasienValues>({
     resolver: zodResolver(schema),
@@ -93,19 +95,30 @@ export function CreatePage() {
           <label htmlFor="jenis_kelamin" className="mb-1.5 block text-sm font-medium">
             Jenis kelamin
           </label>
-          <select
-            id="jenis_kelamin"
-            className="input"
-            aria-invalid={errors.jenis_kelamin !== undefined}
-            {...register('jenis_kelamin')}
-          >
-            <option value="">Pilih</option>
-            <option value="L">Laki-laki</option>
-            <option value="P">Perempuan</option>
-          </select>
-          {errors.jenis_kelamin && (
-            <p className="mt-1 text-xs text-red-600">{errors.jenis_kelamin.message}</p>
-          )}
+          <Controller
+            control={control}
+            name="jenis_kelamin"
+            render={({ field }) => (
+              <>
+                <SearchableSelect
+                  id="jenis_kelamin"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: 'Pilih', value: '' },
+                    { label: 'Laki-laki', value: 'L' },
+                    { label: 'Perempuan', value: 'P' },
+                  ]}
+                  placeholder="Pilih"
+                  ariaLabel="Jenis kelamin"
+                  invalid={errors.jenis_kelamin !== undefined}
+                />
+                {errors.jenis_kelamin && (
+                  <p className="mt-1 text-xs text-red-600">{errors.jenis_kelamin.message}</p>
+                )}
+              </>
+            )}
+          />
         </div>
       </div>
 

@@ -1,0 +1,13 @@
+{
+  "name": "lab-mock",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "description": "Mock sistem laboratorium pihak ketiga untuk uji integrasi SIMRS",
+  "scripts": {
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0"
+  }
+}

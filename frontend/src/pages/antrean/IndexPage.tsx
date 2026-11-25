@@ -4,6 +4,7 @@ import { listAntreans } from '../../api/antrean'
 import { errorMessage } from '../../api/client'
 import { STATUS_LABEL } from '../../api/kunjungan'
 import { listPolis } from '../../api/poli'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { tanggalHariIni } from '../../lib/tanggal'
 
 export function IndexPage() {
@@ -24,10 +25,10 @@ export function IndexPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">List Antrean</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">List Antrean</h1>
 
       <section className="card">
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 px-4 py-3 [&>*]:w-full sm:[&>*]:w-56">
           <input
             type="date"
             value={tanggal}
@@ -35,19 +36,19 @@ export function IndexPage() {
             className="input max-w-[10rem]"
             aria-label="Tanggal antrean"
           />
-          <select
+          <SearchableSelect
             value={poliId}
-            onChange={(e) => setPoliId(e.target.value)}
-            className="select"
-            aria-label="Filter poli"
-          >
-            <option value="">Semua poli</option>
-            {(polis.data ?? []).map((poli) => (
-              <option key={poli.id} value={poli.id}>
-                {poli.nama}
-              </option>
-            ))}
-          </select>
+            onChange={setPoliId}
+            options={[
+              { label: 'Semua poli', value: '' },
+              ...(polis.data ?? []).map((poli) => ({
+                label: poli.nama,
+                value: poli.id,
+              })),
+            ]}
+            placeholder="Semua poli"
+            ariaLabel="Filter poli"
+          />
         </div>
 
         {antreans.isError && (
@@ -66,7 +67,8 @@ export function IndexPage() {
           </div>
         )}
 
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Antrean</th>
@@ -111,6 +113,7 @@ export function IndexPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   )

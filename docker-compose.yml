@@ -59,5 +59,38 @@ services:
       timeout: 5s
       retries: 5
 
+  node-api:
+    image: node:20-alpine
+    working_dir: /srv
+    ports:
+      - "${NODE_PORT:-3001}:3001"
+    environment:
+      PG_DSN: postgres://simrs_svc:${DB_SVC_PASSWORD:-simrs_svc}@db:5432/simrs
+      PORT: 3001
+      API_KEY: ${NODE_API_KEY:-simrs-dev-node-key}
+      MOCK_BASE: http://lab-mock:3002
+      MOCK_API_KEY: ${MOCK_API_KEY:-simrs-dev-mock-key}
+      YII_BASE: http://nginx/api/v1
+      YII_API_KEY: ${LAB_API_KEY:-simrs-dev-lab-key}
+      INTERVAL_MS: 5000
+    volumes:
+      - ./services/backend-node:/srv
+    command: sh -c "npm install --omit=dev --silent && node src/index.js"
+    depends_on:
+      db:
+        condition: service_healthy
+      nginx:
+        condition: service_healthy
+
+  lab-mock:
+    image: node:20-alpine
+    working_dir: /srv
+    environment:
+      PORT: 3002
+      API_KEY: ${MOCK_API_KEY:-simrs-dev-mock-key}
+    volumes:
+      - ./services/lab-mock:/srv
+    command: sh -c "npm install --omit=dev --silent && node src/index.js"
+
 volumes:
   db_data:

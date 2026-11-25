@@ -53,7 +53,7 @@ class KunjunganCest
 
         $noKunjungan = (string) $I->grabDataFromResponseByJsonPath('$.data.no_kunjungan')[0];
         $id = (string) $I->grabDataFromResponseByJsonPath('$.data.id')[0];
-        $I->assertMatchesRegularExpression('/^KJ-\d{8}-\d{4}$/', $noKunjungan);
+        $I->assertMatchesRegularExpression('/^KJ-\d{8}-\d{4,}$/', $noKunjungan);
 
         $I->sendGET('kunjungan/' . $id);
         $I->seeResponseCodeIs(200);

@@ -95,10 +95,11 @@ function Form({ data, role }: { data: RoleData; role: RoleRow }) {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold">Access Role</h1>
+      <h1 className="text-xl font-semibold sm:text-2xl">Access Role</h1>
 
       <section className="card">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[40rem] text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Menu</th>
@@ -133,6 +134,7 @@ function Form({ data, role }: { data: RoleData; role: RoleRow }) {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
 
       <div className="flex gap-2">

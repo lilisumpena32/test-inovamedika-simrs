@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useForm } from 'react-hook-form'
+import { Controller, useForm } from 'react-hook-form'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { z } from 'zod'
 import { errorMessage } from '../../api/client'
@@ -9,6 +9,7 @@ import type { JadwalRow } from '../../api/jadwal'
 import { listKaryawans } from '../../api/karyawan'
 import { listPolis } from '../../api/poli'
 import { FormMaster } from '../../components/FormMaster'
+import { SearchableSelect } from '../../components/SearchableSelect'
 import { useToast } from '../../hooks/useToast'
 
 const schema = z.object({
@@ -93,6 +94,7 @@ function Form({ jadwal }: { jadwal: JadwalRow }) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<JadwalValues>({
     resolver: zodResolver(schema),
@@ -112,42 +114,64 @@ function Form({ jadwal }: { jadwal: JadwalRow }) {
         <label htmlFor="karyawan_id" className="mb-1.5 block text-sm font-medium">
           Dokter
         </label>
-        <select
-          id="karyawan_id"
-          className="input"
-          aria-invalid={errors.karyawan_id !== undefined}
-          {...register('karyawan_id')}
-        >
-          <option value="">Pilih dokter</option>
-          {(karyawans.data ?? []).map((karyawan) => (
-            <option key={karyawan.id} value={karyawan.id}>
-              {karyawan.nama_karyawan}
-            </option>
-          ))}
-        </select>
-        {errors.karyawan_id && (
-          <p className="mt-1 text-xs text-red-600">{errors.karyawan_id.message}</p>
-        )}
+        <Controller
+          control={control}
+          name="karyawan_id"
+          render={({ field }) => (
+            <>
+              <SearchableSelect
+                id="karyawan_id"
+                value={field.value}
+                onChange={field.onChange}
+                options={[
+                  { label: 'Pilih dokter', value: '' },
+                  ...(karyawans.data ?? []).map((karyawan) => ({
+                    label: karyawan.nama_karyawan,
+                    value: karyawan.id,
+                  })),
+                ]}
+                placeholder="Pilih dokter"
+                ariaLabel="Dokter"
+                invalid={errors.karyawan_id !== undefined}
+              />
+              {errors.karyawan_id && (
+                <p className="mt-1 text-xs text-red-600">{errors.karyawan_id.message}</p>
+              )}
+            </>
+          )}
+        />
       </div>
 
       <div>
         <label htmlFor="poli_id" className="mb-1.5 block text-sm font-medium">
           Poli
         </label>
-        <select
-          id="poli_id"
-          className="input"
-          aria-invalid={errors.poli_id !== undefined}
-          {...register('poli_id')}
-        >
-          <option value="">Pilih poli</option>
-          {(polis.data ?? []).map((poli) => (
-            <option key={poli.id} value={poli.id}>
-              {poli.nama}
-            </option>
-          ))}
-        </select>
-        {errors.poli_id && <p className="mt-1 text-xs text-red-600">{errors.poli_id.message}</p>}
+        <Controller
+          control={control}
+          name="poli_id"
+          render={({ field }) => (
+            <>
+              <SearchableSelect
+                id="poli_id"
+                value={field.value}
+                onChange={field.onChange}
+                options={[
+                  { label: 'Pilih poli', value: '' },
+                  ...(polis.data ?? []).map((poli) => ({
+                    label: poli.nama,
+                    value: poli.id,
+                  })),
+                ]}
+                placeholder="Pilih poli"
+                ariaLabel="Poli"
+                invalid={errors.poli_id !== undefined}
+              />
+              {errors.poli_id && (
+                <p className="mt-1 text-xs text-red-600">{errors.poli_id.message}</p>
+              )}
+            </>
+          )}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
@@ -155,22 +179,35 @@ function Form({ jadwal }: { jadwal: JadwalRow }) {
           <label htmlFor="hari" className="mb-1.5 block text-sm font-medium">
             Hari
           </label>
-          <select
-            id="hari"
-            className="input"
-            aria-invalid={errors.hari !== undefined}
-            {...register('hari')}
-          >
-            <option value="">Pilih</option>
-            <option value="1">Senin</option>
-            <option value="2">Selasa</option>
-            <option value="3">Rabu</option>
-            <option value="4">Kamis</option>
-            <option value="5">Jumat</option>
-            <option value="6">Sabtu</option>
-            <option value="7">Minggu</option>
-          </select>
-          {errors.hari && <p className="mt-1 text-xs text-red-600">{errors.hari.message}</p>}
+          <Controller
+            control={control}
+            name="hari"
+            render={({ field }) => (
+              <>
+                <SearchableSelect
+                  id="hari"
+                  value={field.value}
+                  onChange={field.onChange}
+                  options={[
+                    { label: 'Pilih', value: '' },
+                    { label: 'Senin', value: '1' },
+                    { label: 'Selasa', value: '2' },
+                    { label: 'Rabu', value: '3' },
+                    { label: 'Kamis', value: '4' },
+                    { label: 'Jumat', value: '5' },
+                    { label: 'Sabtu', value: '6' },
+                    { label: 'Minggu', value: '7' },
+                  ]}
+                  placeholder="Pilih"
+                  ariaLabel="Hari"
+                  invalid={errors.hari !== undefined}
+                />
+                {errors.hari && (
+                  <p className="mt-1 text-xs text-red-600">{errors.hari.message}</p>
+                )}
+              </>
+            )}
+          />
         </div>
         <div>
           <label htmlFor="jam_mulai" className="mb-1.5 block text-sm font-medium">

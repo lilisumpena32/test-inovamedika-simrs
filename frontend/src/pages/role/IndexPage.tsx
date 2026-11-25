@@ -32,7 +32,7 @@ export function IndexPage() {
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">List Role</h1>
+        <h1 className="text-xl font-semibold sm:text-2xl">List Role</h1>
         <Can kode="pengaturan.role" action="can_create">
           <button
             type="button"
@@ -45,7 +45,8 @@ export function IndexPage() {
       </header>
 
       <section className="card">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
               <th className="px-4 py-3 font-medium">Role</th>
@@ -116,6 +117,7 @@ export function IndexPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </section>
     </div>
   )

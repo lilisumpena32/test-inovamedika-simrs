@@ -1,6 +1,7 @@
 # dependency
 /vendor/
 /node_modules/
+**/node_modules/
 /simrs/vendor/
 
 # build dan aset hasil generate
