@@ -105,8 +105,9 @@ Kedua layanan saling melengkapi tanpa duplikasi logic: Yii satu-satunya penulis 
 
 ## Dokumen lanjutan
 
-- [Arsitektur](docs/arsitektur.md)
-- [ERD](docs/erd.md)
+- [Arsitektur](docs/gambar/arsitektur.png)
+- [ERD](docs/gambar/erd.png)
 - [Dokumentasi API](docs/api.md)
 - [Pengujian](docs/pengujian.md)
 - [Bukti implementasi](docs/bukti/)
+- [Dokumentasi Lengkap](docs/Dokumentasi-Implementasi-SIMRS-Inova-Medika.docx)
